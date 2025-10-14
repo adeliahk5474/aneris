@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('clients', function (Blueprint $table) {
+        Schema::create('artist_profiles', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('password');
+            $table->foreignId('artist_id')->constrained()->onDelete('cascade');
             $table->text('bio')->nullable();
-            $table->string('profile_picture')->nullable();
+            $table->string('portfolio_link')->nullable(); // <— tambahkan ini
+            $table->string('profile_image')->nullable();
             $table->timestamps();
         });
+
     }
 
     /**
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('clients');
+        Schema::dropIfExists('artist_profiles');
     }
 };

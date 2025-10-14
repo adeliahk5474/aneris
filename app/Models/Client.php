@@ -9,25 +9,27 @@ class Client extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'email', 'password', 'bio', 'profile_picture'];
+    protected $fillable = [
+        'user_id',
+        'profile_picture',
+        'total_orders',
+        'total_spent',
+        'is_verified',
+    ];
 
+    // Relasi ke User
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    // Relasi ke Commission (pesanan yang dibuat client)
     public function commissions()
     {
         return $this->hasMany(Commission::class);
     }
+    public function cart() {
+    return $this->hasOne(Cart::class);
+}
 
-    public function transactions()
-    {
-        return $this->hasMany(Transaction::class);
-    }
-
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
-    }
-
-    public function notifications()
-    {
-        return $this->morphMany(Notification::class, 'user');
-    }
 }

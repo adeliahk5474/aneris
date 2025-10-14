@@ -9,25 +9,36 @@ class Artist extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'email', 'password', 'bio', 'profile_picture'];
+    protected $fillable = [
+        'user_id',
+        'portfolio_link',
+        'short_bio',
+        'rating',
+        'total_reviews',
+        'is_verified',
+    ];
 
-    public function artworks()
+    // Relasi ke User
+    public function user()
     {
-        return $this->hasMany(Artwork::class);
+        return $this->belongsTo(User::class);
     }
 
+    // Relasi ke Commission (jika sudah ada)
     public function commissions()
     {
         return $this->hasMany(Commission::class);
     }
 
-    public function portfolios()
-    {
-        return $this->hasMany(Portfolio::class);
-    }
+    public function profile()
+{
+    return $this->hasOne(ArtistProfile::class);
+}
 
-    public function notifications()
+    // Hitung rata-rata rating
+    public function getAverageRatingAttribute()
     {
-        return $this->morphMany(Notification::class, 'user');
+        return $this->total_reviews > 0 ? round($this->rating / $this->total_reviews, 2) : null;
     }
+    
 }
