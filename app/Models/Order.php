@@ -2,33 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'client_id',
-        'commission_id',
-        'status',
-        'total_price',
-        'deadline',
+        'client_id', 'artist_id', 'category_id', 'total_price', 'status'
     ];
 
-    public function client()
-    {
-        return $this->belongsTo(Client::class);
+    public function client() {
+        return $this->belongsTo(User::class, 'client_id');
     }
 
-    public function commission()
-    {
-        return $this->belongsTo(Commission::class);
+    public function artist() {
+        return $this->belongsTo(User::class, 'artist_id');
     }
 
-    public function payment()
-    {
-        return $this->hasOne(Payment::class);
+    public function items() {
+        return $this->hasMany(OrderItem::class, 'order_id');
+    }
+
+    public function transaction() {
+        return $this->hasOne(Transaction::class, 'order_id');
     }
 }

@@ -1,30 +1,22 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateCategoriesTable extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::create('categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name'); // contoh: Illustration, 2D Avatar, dll
-            $table->string('slug')->unique(); // untuk URL friendly: illustration, 2d-avatar
-            $table->string('description')->nullable(); // deskripsi opsional
-            $table->timestamps();
+            $table->uuid('category_id')->primary();
+            $table->string('name')->unique();
+            $table->text('description')->nullable();
+            $table->timestampsTz();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('categories');
     }
-};
+}

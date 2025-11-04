@@ -4,19 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CartItem extends Model {
-    protected $fillable = ['cart_id', 'artist_id', 'category_id', 'title', 'description', 'price', 'status'];
+class CartItem extends Model
+{
+    protected $fillable = ['cart_id', 'artwork_id', 'quantity'];
 
     public function cart() {
-        return $this->belongsTo(Cart::class);
+        return $this->belongsTo(Cart::class, 'cart_id');
     }
 
-    public function artist() {
-        return $this->belongsTo(Artist::class);
-    }
-
-    public function category() {
-        return $this->belongsTo(Category::class);
+    public function artwork() {
+        return $this->belongsTo(Artwork::class, 'artwork_id');
     }
 }
-

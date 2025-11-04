@@ -1,30 +1,22 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateCartsTable extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::create('carts', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
-            $table->decimal('total_price', 10, 2)->default(0);
-            $table->enum('status', ['active', 'checked_out'])->default('active');
-            $table->timestamps();
+            $table->uuid('cart_id')->primary();
+            $table->uuid('client_id');
+            $table->foreign('client_id')->references('user_id')->on('users')->onDelete('cascade');
+            $table->timestampsTz();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('carts');
     }
-};
+}

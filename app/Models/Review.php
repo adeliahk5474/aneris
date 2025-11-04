@@ -2,26 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
-    use HasFactory;
-    protected $fillable = [
-        'commission_id', 'client_id', 'artist_id', 'rating', 'comment'
-    ];
+    protected $fillable = ['order_id', 'reviewer_id', 'rating', 'comment'];
 
-    public function commission() {
-        return $this->belongsTo(Commission::class);
+    public function order() {
+        return $this->belongsTo(Order::class, 'order_id', 'order_id');
     }
 
-    public function client() {
-        return $this->belongsTo(Client::class);
-    }
-
-    public function artist() {
-        return $this->belongsTo(Artist::class);
+    public function reviewer() {
+        return $this->belongsTo(User::class, 'reviewer_id');
     }
 }
-

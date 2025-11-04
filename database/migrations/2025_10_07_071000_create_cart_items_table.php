@@ -1,34 +1,25 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateCartItemsTable extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::create('cart_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('cart_id')->constrained('carts')->onDelete('cascade');
-            $table->foreignId('artist_id')->constrained('artists')->onDelete('cascade');
-            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->decimal('price', 10, 2);
-            $table->enum('status', ['pending', 'ordered'])->default('pending');
-            $table->timestamps();
+            $table->uuid('cart_item_id')->primary();
+            $table->uuid('cart_id');
+            $table->foreign('cart_id')->references('cart_id')->on('carts')->onDelete('cascade');
+            $table->uuid('artwork_id');
+            $table->foreign('artwork_id')->references('artwork_id')->on('artworks')->onDelete('restrict');
+            $table->integer('quantity')->default(1);
+            $table->timestampsTz();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('cart_items');
     }
-};
+}

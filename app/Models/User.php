@@ -2,59 +2,70 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use Notifiable;
+
+    protected $primaryKey = 'user_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
-        'full_name',
-        'username',
-        'email',
-        'password',
-        'role',
-        'profile_picture',
+        'name', 'email', 'password', 'role', 'avatar', 'bio', 'country'
     ];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
-
-    // --- Relasi ---
-    public function artist()
+    // 👇 Tambahkan fungsi ini supaya UUID dibuat otomatis
+    protected static function boot()
     {
-        return $this->hasOne(Artist::class);
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->{$model->getKeyName()})) {
+                $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
+        });
     }
 
-    public function client()
-    {
-        return $this->hasOne(Client::class);
+    // Relationships
+    public function artworks() {
+        return $this->hasMany(Artwork::class, 'artist_id');
     }
 
-    // --- Accessor / Mutator ---
-    public function setPasswordAttribute($value)
-    {
-        $this->attributes['password'] = bcrypt($value);
+    public function carts() {
+        return $this->hasMany(Cart::class, 'client_id');
     }
 
-    // --- Helper Role ---
-    public function isArtist(): bool
-    {
-        return $this->role === 'artist';
+    public function ordersAsClient() {
+        return $this->hasMany(Order::class, 'client_id');
     }
 
-    public function isClient(): bool
-    {
-        return $this->role === 'client';
+    public function ordersAsArtist() {
+        return $this->hasMany(Order::class, 'artist_id');
+    }
+
+    public function commissionRequestsAsClient() {
+        return $this->hasMany(CommissionRequest::class, 'client_id');
+    }
+
+    public function commissionRequestsAsArtist() {
+        return $this->hasMany(CommissionRequest::class, 'artist_id');
+    }
+
+    public function reviews() {
+        return $this->hasMany(Review::class, 'reviewer_id');
+    }
+
+    public function notifications() {
+        return $this->hasMany(Notification::class, 'user_id');
+    }
+
+    public function chats() {
+        return $this->hasMany(Chat::class, 'sender_id');
     }
 }

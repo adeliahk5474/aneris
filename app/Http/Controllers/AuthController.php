@@ -3,49 +3,101 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use App\Models\User;
+use App\Services\SupabaseService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    public function showForm() {
-        return view('auth'); // resources/views/auth.blade.php
+    protected $supabase;
+
+    public function __construct(SupabaseService $supabase)
+    {
+        $this->supabase = $supabase;
     }
 
-    public function register(Request $request) {
+    // Tampilkan form login/register
+    public function showAuthForm()
+    {
+        return view('auth.auth');
+    }
+
+    // Register user
+    public function register(Request $request)
+    {
         $request->validate([
-            'name' => 'required',
+            'full_name' => 'required|string|max:150',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6',
-            'role' => 'required|in:client,artist'
+            'password' => 'required|string|confirmed|min:6',
+            'role' => 'required|in:artist,client'
         ]);
 
-        $user = new User();
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->password = bcrypt($request->password);
-        $user->role = $request->role; // client atau artist
-        $user->save();
+        $redirectTo = route('auth.verify'); // redirect setelah klik email verifikasi
 
-        // Tampilkan form login setelah register
-        return view('auth', ['showLogin' => true]);
-    }
+        $supabaseResponse = $this->supabase->signUp($request->email, $request->password, $redirectTo);
 
-    public function login(Request $request) {
-        $credentials = $request->only('email', 'password');
-
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-
-            if (Auth::user()->role == 'artist') {
-                return redirect('/dashboard/artist');
-            } else {
-                return redirect('/dashboard/client');
-            }
+        if (isset($supabaseResponse['error'])) {
+            return back()->withErrors(['msg' => $supabaseResponse['error']['message']]);
         }
 
-        return back()->withErrors([
-            'email' => 'Email atau password salah',
+        // Simpan sementara user di DB Laravel
+        User::create([
+            'user_id' => Str::uuid(),
+            'name' => $request->full_name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role
         ]);
+
+        return redirect()->route('auth.form')->with('success', 'Registration successful. Check your email to verify.');
+    }
+
+    // Verifikasi email
+    public function verify(Request $request)
+    {
+        $access_token = $request->query('access_token');
+
+        if (!$access_token) {
+            return redirect()->route('auth.form')->withErrors(['msg' => 'Verification link is invalid or expired.']);
+        }
+
+        $response = $this->supabase->verifyEmail($access_token);
+
+        if (isset($response['error'])) {
+            return redirect()->route('auth.form')->withErrors(['msg' => $response['error']['message']]);
+        }
+
+        return redirect()->route('auth.form')->with('success', 'Email successfully verified. You can now login.');
+    }
+
+    // Login user
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['msg' => 'Invalid credentials.']);
+        }
+
+        auth()->login($user);
+        return redirect()->route($user->role === 'artist' ? 'dashboard.artist' : 'dashboard.client');
+    }
+
+    // Logout
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home');
     }
 }
