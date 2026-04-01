@@ -12,7 +12,7 @@ class CommissionService extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'artist_id', 'category_id', 'title', 'description', 'price', 'status'
+                'artist_id', 'category_id', 'title', 'description', 'image_url', 'price', 'status',
     ];
 
     protected static function booted()

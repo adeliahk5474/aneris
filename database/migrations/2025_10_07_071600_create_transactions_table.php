@@ -7,6 +7,7 @@ class CreateTransactionsTable extends Migration
 {
     public function up()
     {
+        if (!Schema::hasTable('orders')) {
         Schema::create('transactions', function (Blueprint $table) {
             $table->uuid('transaction_id')->primary();
             $table->uuid('order_id')->nullable();
@@ -17,7 +18,7 @@ class CreateTransactionsTable extends Migration
             $table->decimal('total_amount', 12, 2)->default(0);
             $table->timestampsTz();
         });
-    }
+    }}
 
     public function down()
     {

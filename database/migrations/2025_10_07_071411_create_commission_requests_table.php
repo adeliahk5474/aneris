@@ -28,6 +28,13 @@ return new class extends Migration {
                   ->on('categories')
                   ->nullOnDelete();
 
+            // Tambahan: service_id
+            $table->uuid('service_id')->nullable();
+            $table->foreign('service_id')
+                  ->references('service_id')
+                  ->on('commission_services')
+                  ->nullOnDelete();
+
             $table->text('description')->nullable();
             $table->decimal('proposed_price', 12, 2)->default(0);
             $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');

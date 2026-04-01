@@ -1,99 +1,174 @@
-{{-- resources/views/homepage/home.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Home')
-
 @section('content')
-    {{-- Banner --}}
-    <section class="container-fluid p-0 mb-4">
-        <div class="position-relative w-100" style="height: 65vh; overflow:hidden;">
-            <img src="https://cdn.pixabay.com/photo/2023/04/01/15/39/art-7893095_1280.jpg"
-                 class="w-100 h-100 object-fit-cover" alt="Aneris Banner">
-            <div class="position-absolute top-50 start-50 translate-middle text-center text-white">
-                <h1 class="fw-bold display-5">Welcome to Aneris</h1>
-                <p class="fs-5 mb-4">Discover and commission talented artists from around the world</p>
-                <a href="#showcase" class="btn btn-light btn-lg px-4 rounded-pill fw-semibold shadow-sm">Explore Artists</a>
+
+<style>
+    /* Grid 2 kolom */
+    .grid-feed {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding-bottom: 80px;
+    }
+
+    .post {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .post-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 10px;
+    }
+
+    .post-header .user {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #ccc;
+    }
+
+    .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* FIXED 4:5 */
+    .post-image {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .post-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* utuh tanpa crop */
+        object-position: center;
+    }
+
+    .post-footer {
+        padding: 10px;
+    }
+
+    .buttons {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 6px;
+        align-items: center;
+    }
+
+    .buttons svg {
+        width: 22px;
+        height: 22px;
+        stroke-width: 1.6;
+        cursor: pointer;
+    }
+
+    .icon-group {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .counter {
+        font-size: 12px;
+        color: #555;
+    }
+
+    .likes {
+        font-weight: 700;
+        margin-bottom: 4px;
+        font-size: 13px;
+    }
+
+    .caption {
+        font-size: 13px;
+        color: #333;
+    }
+</style>
+
+<div class="container">
+    <div class="grid-feed">
+
+        @foreach($feed as $art)
+        <div class="post">
+
+            {{-- HEADER --}}
+            <div class="post-header">
+                <div class="user">
+                    <div class="avatar">
+                        <img src="{{ $art->user->avatar ?? '/default-avatar.png' }}">
+                    </div>
+                    {{ $art->user->name ?? 'Unknown Artist' }}
+                </div>
+                <div>⋯</div>
             </div>
-        </div>
-    </section>
 
-    {{-- Search & Filter --}}
-    <section class="container mb-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <form method="GET" action="{{ route('home') }}" class="d-flex">
-                    <input type="text" name="search" class="form-control me-2 rounded-pill"
-                           placeholder="Search commission or artist..."
-                           value="{{ request('search') }}">
-                    <button class="btn btn-dark rounded-pill px-4">Search</button>
-                </form>
+            {{-- IMAGE --}}
+            <div class="post-image">
+                <img src="{{ $art->preview_url ?? $art->file_url }}">
             </div>
-        </div>
-    </section>
 
-    {{-- Showcase Section --}}
-    <section id="showcase" class="container mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="fw-semibold mb-0">Showcase for Artists</h3>
-            <a href="#" class="text-decoration-none text-dark fw-medium small">See All →</a>
-        </div>
+            {{-- FOOTER --}}
+            <div class="post-footer">
 
-        <div class="row">
-            @forelse($services as $service)
-                <div class="col-md-4 mb-4">
-                    <div class="card border-0 shadow-sm h-100 hover-scale"
-                         style="transition: transform .2s;">
-                        <img src="{{ $service->image_url ?? 'https://cdn-icons-png.flaticon.com/512/6598/6598519.png' }}"
-                             class="card-img-top" alt="Service Image"
-                             style="object-fit: cover; height: 220px;">
+                <div class="buttons">
 
-                        <div class="card-body">
-                            <h5 class="fw-semibold mb-1">{{ $service->title }}</h5>
-                            <p class="text-muted small mb-2">by {{ $service->artist->name ?? 'Unknown Artist' }}</p>
-                            <p class="text-secondary small">{{ Str::limit($service->description, 90) }}</p>
+                    <div class="icon-group">
+                        @svg('heroicon-o-heart')
+                        <span class="counter">{{ $art->likes ?? 0 }}</span>
+                    </div>
 
-                            <button class="btn btn-outline-dark btn-sm rounded-pill mt-2"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#serviceModal{{ $service->id }}">
-                                View Details
-                            </button>
-                        </div>
+                    <div class="icon-group">
+                        @svg('heroicon-o-chat-bubble-left')
+                        <span class="counter">{{ $art->comments ?? 0 }}</span>
+                    </div>
+
+                    <div class="icon-group">
+                        @svg('heroicon-o-paper-airplane')
+                        <span class="counter">{{ $art->shares ?? 0 }}</span>
+                    </div>
+
+                    <div class="icon-group">
+                        @svg('heroicon-o-bookmark')
                     </div>
                 </div>
 
-                {{-- Modal Detail --}}
-                <div class="modal fade" id="serviceModal{{ $service->id }}" tabindex="-1"
-                     aria-labelledby="serviceModalLabel{{ $service->id }}" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-centered">
-                        <div class="modal-content border-0 shadow-sm">
-                            <div class="modal-header bg-dark text-white">
-                                <h5 class="modal-title" id="serviceModalLabel{{ $service->id }}">{{ $service->title }}</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <img src="{{ $service->image_url ?? 'https://cdn-icons-png.flaticon.com/512/6598/6598519.png' }}"
-                                     class="w-100 rounded mb-3" alt="Service Image">
-                                <p>{{ $service->description }}</p>
-                                <p class="fw-semibold mb-0">Artist: {{ $service->artist->name ?? 'Unknown' }}</p>
-                                <p class="text-muted">Price: Rp {{ number_format($service->price, 0, ',', '.') }}</p>
-                            </div>
-                            <div class="modal-footer bg-light">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <button class="btn btn-dark">Commission This</button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="likes">
+                    {{ $art->likes ?? 0 }} likes
                 </div>
-            @empty
-                <div class="text-center py-5 text-muted">
-                    <img src="https://cdn-icons-png.flaticon.com/512/6598/6598519.png" width="90" class="opacity-50 mb-3">
-                    <p class="mb-0">No commission services available at the moment.</p>
-                </div>
-            @endforelse
-        </div>
-    </section>
 
-    <style>
-        .hover-scale:hover { transform: scale(1.02); }
-    </style>
+                <div class="caption">
+                    {{ $art->caption ?? '' }}
+                </div>
+
+            </div>
+
+        </div>
+        @endforeach
+
+    </div>
+</div>
+
+@include('layouts.botnav')
+
 @endsection

@@ -8,6 +8,7 @@ class CreateOrderItemsTable extends Migration
 {
     public function up()
     {
+        if (!Schema::hasTable('orders')) {
         Schema::create('order_items', function (Blueprint $table) {
             $table->uuid('order_item_id')->primary();
             $table->uuid('order_id');
@@ -26,7 +27,7 @@ class CreateOrderItemsTable extends Migration
 
             $table->timestampsTz();
         });
-    }
+    }}
 
     public function down()
     {

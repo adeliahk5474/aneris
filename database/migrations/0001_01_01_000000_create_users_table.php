@@ -12,7 +12,7 @@ class CreateUsersTable extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('role', ['artist','client','admin'])->default('client');
+            $table->enum('role', ['artist','client'])->default('client');
             $table->string('avatar')->nullable();
             $table->text('bio')->nullable();
             $table->string('country')->nullable();

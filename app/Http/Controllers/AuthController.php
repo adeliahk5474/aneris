@@ -19,9 +19,13 @@ class AuthController extends Controller
         $this->supabase = $supabase;
     }
 
-    // Tampilkan form login/register
+    // Show login & register form
     public function showAuthForm()
     {
+        if (Auth::check()) {
+            return redirect()->route('home');
+        }
+
         return view('auth.auth');
     }
 
@@ -35,7 +39,7 @@ class AuthController extends Controller
             'role' => 'required|in:artist,client'
         ]);
 
-        $redirectTo = route('auth.verify'); // redirect setelah klik email verifikasi
+        $redirectTo = route('auth.verify');
 
         $supabaseResponse = $this->supabase->signUp($request->email, $request->password, $redirectTo);
 
@@ -43,7 +47,7 @@ class AuthController extends Controller
             return back()->withErrors(['msg' => $supabaseResponse['error']['message']]);
         }
 
-        // Simpan sementara user di DB Laravel
+        // Save user temporarily before verified
         User::create([
             'user_id' => Str::uuid(),
             'name' => $request->full_name,
@@ -52,16 +56,16 @@ class AuthController extends Controller
             'role' => $request->role
         ]);
 
-        return redirect()->route('auth.form')->with('success', 'Registration successful. Check your email to verify.');
+        return redirect()->route('auth.form')->with('success', 'Registration successful. Please check your email for verification.');
     }
 
-    // Verifikasi email
+    // Email verification
     public function verify(Request $request)
     {
         $access_token = $request->query('access_token');
 
         if (!$access_token) {
-            return redirect()->route('auth.form')->withErrors(['msg' => 'Verification link is invalid or expired.']);
+            return redirect()->route('auth.form')->withErrors(['msg' => 'Verification link invalid or expired']);
         }
 
         $response = $this->supabase->verifyEmail($access_token);
@@ -70,7 +74,7 @@ class AuthController extends Controller
             return redirect()->route('auth.form')->withErrors(['msg' => $response['error']['message']]);
         }
 
-        return redirect()->route('auth.form')->with('success', 'Email successfully verified. You can now login.');
+        return redirect()->route('auth.form')->with('success', 'Email verified. You may now login.');
     }
 
     // Login user
@@ -81,20 +85,20 @@ class AuthController extends Controller
             'password' => 'required|string'
         ]);
 
-        $user = User::where('email', $request->email)->first();
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return back()->withErrors(['msg' => 'Invalid credentials.']);
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::attempt($credentials, $request->remember)) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('home')); // Always go back to last page or home
         }
 
-        auth()->login($user);
-        return redirect()->route($user->role === 'artist' ? 'dashboard.artist' : 'dashboard.client');
+        return back()->withErrors(['msg' => 'Invalid credentials']);
     }
 
-    // Logout
+    // Logout user
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

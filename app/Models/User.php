@@ -33,8 +33,9 @@ class User extends Authenticatable
     }
 
     // Relationships
-    public function artworks() {
-        return $this->hasMany(Artwork::class, 'artist_id');
+    public function artworks()
+    {
+        return $this->hasMany(Artwork::class, 'user_id', 'user_id');
     }
 
     public function carts() {
@@ -68,4 +69,15 @@ class User extends Authenticatable
     public function chats() {
         return $this->hasMany(Chat::class, 'sender_id');
     }
+
+        public function followers()
+    {
+        return $this->hasMany(Follow::class, 'following_id');
+    }
+
+    public function following()
+    {
+        return $this->hasMany(Follow::class, 'follower_id');
+    }
+
 }

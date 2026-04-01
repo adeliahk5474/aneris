@@ -9,16 +9,15 @@ class CreateArtworksTable extends Migration
     {
         Schema::create('artworks', function (Blueprint $table) {
             $table->uuid('artwork_id')->primary();
-            $table->uuid('artist_id');
-            $table->foreign('artist_id')->references('user_id')->on('users')->onDelete('cascade');
+            $table->uuid('user_id');
+            $table->foreign('user_id')
+                ->references('user_id')
+                ->on('users')
+                ->onDelete('cascade');
             $table->uuid('category_id')->nullable();
             $table->foreign('category_id')->references('category_id')->on('categories')->nullOnDelete();
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->string('file_url')->nullable();
-            $table->string('preview_url')->nullable();
-            $table->decimal('price', 12, 2)->default(0);
-            $table->enum('status', ['public','private','draft'])->default('public');
+            $table->string('image_url')->nullable();
+            $table->text('caption')->nullable();
             $table->timestampsTz();
         });
     }

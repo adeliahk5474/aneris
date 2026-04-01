@@ -1,48 +1,68 @@
 <?php
+
 namespace App\Http\Controllers;
 
+use App\Models\Order;
+use App\Models\Chat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Cart;
-use App\Models\CartItem;
-use App\Models\CommissionRequest;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CartController extends Controller
 {
-    public function add(Request $request)
-    {
-        if (!Auth::check()) {
-            return response()->json(['success'=>false, 'message'=>'Login required'], 401);
-        }
+	/**
+	 * Add commission/order from cart (simple flow): create Order and initial Chat
+	 * Expects: artist_id, total_price, category_id, notes, paid
+	 */
+	public function add(Request $request)
+	{
+		if (!Auth::check()) {
+			return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+		}
 
-        $request->validate([
-            'commission_request_id' => 'required|exists:commission_requests,id'
-        ]);
+		$data = $request->validate([
+			'artist_id' => 'required|string',
+			'total_price' => 'required|numeric',
+			'category_id' => 'nullable|string',
+			'notes' => 'nullable|string',
+			'paid' => 'sometimes|boolean',
+		]);
 
-        $cr = CommissionRequest::findOrFail($request->commission_request_id);
+		try {
+			$status = (!empty($data['paid']) && $data['paid']) ? 'Paid' : 'On Progress';
 
-        // find or create cart for user
-        $cart = Cart::firstOrCreate(
-            ['user_id' => Auth::id()],
-            ['status' => 'open'] // sesuaikan skema cart
-        );
+			$order = Order::create([
+				'client_id' => Auth::id(),
+				'artist_id' => $data['artist_id'],
+				'category_id' => $data['category_id'] ?? null,
+				'total_price' => $data['total_price'],
+				'status' => $status,
+			]);
 
-        // create cart item
-        $item = CartItem::create([
-            'cart_id' => $cart->id,
-            'commission_request_id' => $cr->id,
-            'price' => $cr->proposed_price,
-            'quantity' => 1
-        ]);
+			// create chat thread for this order
+			$chat = Chat::create([
+				'chat_id' => (string) Str::uuid(),
+				'order_id' => $order->id ?? null,
+				'sender_id' => Auth::id(),
+				'receiver_id' => $data['artist_id'],
+				'message' => 'Order placed via cart: ' . ($data['notes'] ?? 'No message'),
+				'is_read' => false,
+			]);
 
-        // optionally update commission_request status to 'in_cart' or keep 'pending_payment'
-        $cr->update(['status' => 'in_cart']);
+			// Return JSON with redirect target to chat thread for immediate discussion
+			return response()->json([
+				'success' => true,
+				'message' => 'Order created',
+				'order' => $order,
+				'chat_id' => $chat->chat_id,
+				'redirect' => route('chat.thread', $chat->chat_id),
+			]);
+		} catch (\Throwable $e) {
+			Log::error('Cart add failed: ' . $e->getMessage());
+			return response()->json(['success' => false, 'message' => 'Failed to add to cart'], 500);
+		}
+	}
 
-        return response()->json([
-            'success' => true,
-            'cart_id' => $cart->id,
-            'cart_item_id' => $item->id,
-            'message' => 'Added to cart'
-        ]);
-    }
 }
+

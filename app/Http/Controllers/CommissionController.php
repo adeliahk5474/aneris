@@ -1,43 +1,66 @@
 <?php
+
 namespace App\Http\Controllers;
 
+use App\Models\Order;
+use App\Models\Chat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\CommissionService;
-use App\Models\CommissionRequest;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CommissionController extends Controller
 {
-    // show() tetap sama...
+	/**
+	 * Create a commission order (client -> artist)
+	 * Expected payload: artist_id, total_price, category_id, notes (optional), paid (bool)
+	 */
+	public function store(Request $request)
+	{
+		if (!Auth::check()) {
+			return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+		}
 
-    // request: buat CommissionRequest lalu return JSON
-    public function request(Request $request, $service_id)
-    {
-        if (!Auth::check()) {
-            return response()->json(['success'=>false, 'needLogin'=>true, 'message'=>'Login required'], 401);
-        }
+		$data = $request->validate([
+			'artist_id' => 'required|string',
+			'total_price' => 'required|numeric',
+			'category_id' => 'nullable|string',
+			'notes' => 'nullable|string',
+			'paid' => 'sometimes|boolean',
+		]);
 
-        $request->validate([
-            'description' => 'required|string|max:1000',
-            'proposed_price' => 'nullable|numeric|min:0'
-        ]);
+		try {
+			$status = (!empty($data['paid']) && $data['paid']) ? 'Paid' : 'On Progress';
 
-        $service = CommissionService::findOrFail($service_id);
+			$order = Order::create([
+				'client_id' => Auth::id(),
+				'artist_id' => $data['artist_id'],
+				'category_id' => $data['category_id'] ?? null,
+				'total_price' => $data['total_price'],
+				'status' => $status,
+			]);
 
-        $commissionRequest = CommissionRequest::create([
-            'client_id' => Auth::id(),
-            'artist_id' => $service->artist_id,
-            'category_id' => $service->category_id,
-            'description' => $request->description,
-            'proposed_price' => $request->proposed_price ?? $service->price,
-            'status' => 'pending_payment', // pending_payment agar jelas tahap
-        ]);
+			// create initial chat thread for this order so artist & client can discuss
+			$chat = Chat::create([
+				'chat_id' => (string) Str::uuid(),
+				'order_id' => $order->id ?? null,
+				'sender_id' => Auth::id(),
+				'receiver_id' => $data['artist_id'],
+				'message' => 'Order created: ' . ($data['notes'] ?? 'No message'),
+				'is_read' => false,
+			]);
 
-        return response()->json([
-            'success' => true,
-            'commission_request_id' => $commissionRequest->id,
-            'amount' => (float)$commissionRequest->proposed_price,
-            'message' => 'Request created'
-        ]);
-    }
+			return response()->json([
+				'success' => true,
+				'message' => 'Order created',
+				'order' => $order,
+				'chat_id' => $chat->chat_id,
+			]);
+		} catch (\Throwable $e) {
+			Log::error('Failed to create commission order: ' . $e->getMessage());
+			return response()->json(['success' => false, 'message' => 'Failed to create order'], 500);
+		}
+	}
+
 }
+

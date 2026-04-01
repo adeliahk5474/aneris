@@ -2,23 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Artwork;
 use App\Models\CommissionService;
 use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
-    public function index()
-    {
-        // Ambil layanan aktif beserta artisnya
-        $services = CommissionService::with('artist')
-            ->where('status', 'active')
-            ->latest()
-            ->take(9)
-            ->get();
+public function index()
+{
+    // Ambil commission terbaru atau artwork terbaru
+        // limit memory usage by paginating the feed (loads only a page at a time)
+        $feed = Artwork::with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(24);
 
-        // Cek apakah user sedang login
-        $user = Auth::user();
+    return view('homepage.home', compact('feed'));
+}
 
-        return view('homepage.home', compact('services', 'user'));
-    }
 }
