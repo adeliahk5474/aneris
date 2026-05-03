@@ -39,7 +39,7 @@ class UploadController extends Controller
         Artwork::create([
             'artwork_id' => Str::uuid(),
             'user_id' => Auth::id(),
-            'category_id' => $request->category_id, 
+            'category_id' => $request->category_id,
             'caption'   => $request->caption,
             'image_url' => $url,
             'status'    => 'published',
@@ -55,9 +55,9 @@ class UploadController extends Controller
     public function uploadCommission(Request $request)
     {
         $request->validate([
-            'category_id' => 'required',
+            'category_id' => 'required|exists:categories,category_id',
             'title'       => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'required|string',
             'price'       => 'required|numeric',
             'image'       => 'required|image|mimes:png,jpg,jpeg|max:4096',
         ]);
@@ -68,7 +68,7 @@ class UploadController extends Controller
         $url       = asset('storage/' . $path);
 
         CommissionService::create([
-            'artist_id'   => auth()->id(),
+            'artist_id'   => Auth::id(),
             'category_id' => $request->category_id,
             'title'       => $request->title,
             'description' => $request->description,
@@ -77,6 +77,6 @@ class UploadController extends Controller
             'status'      => 'active',
         ]);
 
-        return redirect()->route('home')->with('success', 'Commission service uploaded!');
+        return back()->with('success', 'Commission service uploaded!');
     }
 }

@@ -1,4 +1,4 @@
-{{-- resources/views/commission/show.blade.php --}}
+
 
 <style>
 /* ================= SERVICE POPUP FIX ================= */
@@ -68,7 +68,7 @@
 <div class="artwork-popup" id="servicePopup">
     <div class="artwork-popup-content service-popup-content">
 
-        {{-- HEADER --}}
+        
         <div class="service-header">
             <div class="service-user">
                 <img id="serviceAvatar">
@@ -78,12 +78,12 @@
             <span class="close-popup" style="cursor:pointer;font-size:20px;">&times;</span>
         </div>
 
-        {{-- IMAGE --}}
+        
         <div class="service-image">
             <img id="serviceImage">
         </div>
 
-        {{-- CONTENT (SCROLLABLE) --}}
+        
         <div class="content-scroll service-content">
 
             <h6 id="serviceTitle" style="font-weight:600;margin-bottom:5px;"></h6>
@@ -96,7 +96,7 @@
 
         </div>
 
-        {{-- ACTION --}}
+        
         <div class="service-actions">
             <button id="orderBtn"
                 style="flex:1;background:#000;color:#fff;border:none;padding:10px;border-radius:6px;">
@@ -112,3 +112,4 @@
 
     </div>
 </div>
+<?php /**PATH C:\Users\User\Documents\ade\aneris\resources\views/commission/show.blade.php ENDPATH**/ ?>

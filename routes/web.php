@@ -14,6 +14,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ArtistDashboardController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\EditController;
+use App\Http\Controllers\CommissionServiceController;
 
 // ===============================
 // HOME / HOMEPAGE
@@ -56,11 +57,24 @@ Route::get('/dashboard', [ArtistDashboardController::class, 'index'])
 // ===============================
 Route::get('/upload', [UploadController::class, 'popup'])->name('upload.popup');
 Route::post('/upload-artwork', [UploadController::class, 'uploadArtwork'])->name('upload.artwork');
-Route::post('/upload-commission', [UploadController::class, 'uploadCommission'])->name('upload.commission');
 Route::post('/artwork/update', [ArtworkController::class, 'updateFromModal'])->name('artwork.update');
 Route::post('/artwork/delete', [ArtworkController::class, 'destroyFromModal'])->name('artwork.delete');
 // API: create a commission/order from client to artist
 Route::post('/commission', [CommissionController::class, 'store'])->name('commission.store')->middleware('auth');
+Route::post('/upload-commission', [UploadController::class, 'uploadCommission'])->name('upload.commission');
+Route::get('/commission/{id}', [CommissionServiceController::class, 'detail'])
+    ->name('commission.detail');
+Route::get('/commission/{id}', [CommissionServiceController::class, 'show'])
+    ->name('commission.show');
+Route::put(
+    '/commission/{id}',
+    [CommissionServiceController::class, 'update']
+)
+    ->name('commission.update');
+Route::delete('/commission/{id}', [CommissionServiceController::class, 'destroy'])
+    ->name('commission.delete');
+Route::post('/order', [OrderController::class, 'store'])
+    ->name('order.store');
 // ===============================
 // CART
 // ===============================

@@ -290,13 +290,22 @@
     <div id="tab-commission-content" class="tab-content" style="display:none;">
         <div class="grid-art">
             <?php $__empty_1 = true; $__currentLoopData = $commissionServices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $service): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-            <div>
+            <a href="javascript:void(0)"
+                class="service-trigger"
+                data-id="<?php echo e($service->service_id); ?>"
+                data-title="<?php echo e($service->title); ?>"
+                data-price="<?php echo e($service->price); ?>"
+                data-description="<?php echo e($service->description); ?>"
+                data-image="<?php echo e($service->image_url); ?>"
+                data-user-name="<?php echo e($user->name); ?>"
+                data-user-avatar="<?php echo e($user->avatar ?? '/default-avatar.png'); ?>">
+
                 <img src="<?php echo e($service->image_url); ?>" alt="Service">
                 <p style="font-size:12px;margin-top:4px;">
                     <?php echo e($service->title); ?>
 
                 </p>
-            </div>
+            </a>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
             <p>No commissions yet.</p>
             <?php endif; ?>
@@ -421,6 +430,7 @@
     </div>
 </div>
 
+<?php echo $__env->make('dashboards.service', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <?php echo $__env->make('layouts.botnav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 <script>
@@ -540,8 +550,92 @@
         navigator.clipboard.writeText(input.value);
         alert('Profile link copied!');
     }
+
+    // ================= POPUP =================
+    const serviceTriggers = document.querySelectorAll('.service-trigger');
+    const servicePopup = document.getElementById('servicePopup');
+
+    const serviceImage = document.getElementById('serviceImage');
+    const serviceTitle = document.getElementById('serviceTitle');
+    const servicePrice = document.getElementById('servicePrice');
+    const serviceDescription = document.getElementById('serviceDescription');
+    const serviceUserName = document.getElementById('serviceUserName');
+    const serviceAvatar = document.getElementById('serviceAvatar');
+
+    serviceTriggers.forEach(trigger => {
+        trigger.addEventListener('click', () => {
+            serviceImage.src = trigger.dataset.image;
+            serviceTitle.innerText = trigger.dataset.title;
+            servicePrice.innerText = "Rp " + trigger.dataset.price;
+            serviceDescription.innerText = trigger.dataset.description;
+            serviceUserName.innerText = trigger.dataset.userName;
+            serviceAvatar.src = trigger.dataset.userAvatar;
+
+            serviceImage.dataset.id = trigger.dataset.id;
+
+            servicePopup.style.display = 'flex';
+        });
+    });
+
+    servicePopup.addEventListener('click', e => {
+        if (e.target === servicePopup) servicePopup.style.display = 'none';
+    });
+
+
+    // ================= DROPDOWN =================
+    const serviceDots = document.getElementById('serviceDots');
+    const serviceDropdown = document.getElementById('serviceDropdown');
+
+    serviceDots.addEventListener('click', () => {
+        serviceDropdown.style.display =
+            (serviceDropdown.style.display === 'flex') ? 'none' : 'flex';
+    });
+
+
+    // ================= EDIT =================
+    const editServiceModal = document.getElementById('editServiceModal');
+    const editServiceBtn = document.getElementById('editServiceBtn');
+
+    const editServiceId = document.getElementById('editServiceId');
+    const editServiceTitle = document.getElementById('editServiceTitle');
+    const editServicePrice = document.getElementById('editServicePrice');
+    const editServiceDescription = document.getElementById('editServiceDescription');
+
+    editServiceBtn.addEventListener('click', () => {
+        editServiceId.value = serviceImage.dataset.id;
+        editServiceTitle.value = serviceTitle.innerText;
+        editServicePrice.value = servicePrice.innerText.replace('Rp ', '');
+        editServiceDescription.value = serviceDescription.innerText;
+
+        editServiceModal.style.display = 'flex';
+        servicePopup.style.display = 'none';
+    });
+
+
+    // ================= DELETE =================
+    const deleteServiceModal = document.getElementById('deleteServiceModal');
+    const deleteServiceBtn = document.getElementById('deleteServiceBtn');
+    const deleteServiceId = document.getElementById('deleteServiceId');
+    const cancelServiceDelete = document.getElementById('cancelServiceDelete');
+
+    deleteServiceBtn.addEventListener('click', () => {
+        deleteServiceId.value = serviceImage.dataset.id;
+        deleteServiceModal.style.display = 'flex';
+        servicePopup.style.display = 'none';
+    });
+
+    cancelServiceDelete.addEventListener('click', () => {
+        deleteServiceModal.style.display = 'none';
+    });
+
+
+    // ================= CLOSE =================
+    document.querySelectorAll('.close-popup').forEach(el => {
+        el.addEventListener('click', () => {
+            el.closest('.artwork-popup').style.display = 'none';
+        });
+    });
 </script>
 
 <?php $__env->stopSection(); ?>
-
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\User\Documents\ade\aneris\resources\views/dashboards/profile.blade.php ENDPATH**/ ?>

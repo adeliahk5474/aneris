@@ -292,12 +292,21 @@
     <div id="tab-commission-content" class="tab-content" style="display:none;">
         <div class="grid-art">
             @forelse($commissionServices as $service)
-            <div>
+            <a href="javascript:void(0)"
+                class="service-trigger"
+                data-id="{{ $service->service_id }}"
+                data-title="{{ $service->title }}"
+                data-price="{{ $service->price }}"
+                data-description="{{ $service->description }}"
+                data-image="{{ $service->image_url }}"
+                data-user-name="{{ $user->name }}"
+                data-user-avatar="{{ $user->avatar ?? '/default-avatar.png' }}">
+
                 <img src="{{ $service->image_url }}" alt="Service">
                 <p style="font-size:12px;margin-top:4px;">
                     {{ $service->title }}
                 </p>
-            </div>
+            </a>
             @empty
             <p>No commissions yet.</p>
             @endforelse
@@ -422,6 +431,7 @@
     </div>
 </div>
 
+@include('dashboards.service')
 @include('layouts.botnav')
 
 <script>
@@ -541,6 +551,91 @@
         navigator.clipboard.writeText(input.value);
         alert('Profile link copied!');
     }
+
+    // ================= POPUP =================
+    const serviceTriggers = document.querySelectorAll('.service-trigger');
+    const servicePopup = document.getElementById('servicePopup');
+
+    const serviceImage = document.getElementById('serviceImage');
+    const serviceTitle = document.getElementById('serviceTitle');
+    const servicePrice = document.getElementById('servicePrice');
+    const serviceDescription = document.getElementById('serviceDescription');
+    const serviceUserName = document.getElementById('serviceUserName');
+    const serviceAvatar = document.getElementById('serviceAvatar');
+
+    serviceTriggers.forEach(trigger => {
+        trigger.addEventListener('click', () => {
+            serviceImage.src = trigger.dataset.image;
+            serviceTitle.innerText = trigger.dataset.title;
+            servicePrice.innerText = "Rp " + trigger.dataset.price;
+            serviceDescription.innerText = trigger.dataset.description;
+            serviceUserName.innerText = trigger.dataset.userName;
+            serviceAvatar.src = trigger.dataset.userAvatar;
+
+            serviceImage.dataset.id = trigger.dataset.id;
+
+            servicePopup.style.display = 'flex';
+        });
+    });
+
+    servicePopup.addEventListener('click', e => {
+        if (e.target === servicePopup) servicePopup.style.display = 'none';
+    });
+
+
+    // ================= DROPDOWN =================
+    const serviceDots = document.getElementById('serviceDots');
+    const serviceDropdown = document.getElementById('serviceDropdown');
+
+    serviceDots.addEventListener('click', () => {
+        serviceDropdown.style.display =
+            (serviceDropdown.style.display === 'flex') ? 'none' : 'flex';
+    });
+
+
+    // ================= EDIT =================
+    const editServiceModal = document.getElementById('editServiceModal');
+    const editServiceBtn = document.getElementById('editServiceBtn');
+
+    const editServiceId = document.getElementById('editServiceId');
+    const editServiceTitle = document.getElementById('editServiceTitle');
+    const editServicePrice = document.getElementById('editServicePrice');
+    const editServiceDescription = document.getElementById('editServiceDescription');
+
+    editServiceBtn.addEventListener('click', () => {
+        editServiceId.value = serviceImage.dataset.id;
+        editServiceTitle.value = serviceTitle.innerText;
+        editServicePrice.value = servicePrice.innerText.replace('Rp ', '');
+        editServiceDescription.value = serviceDescription.innerText;
+
+        editServiceModal.style.display = 'flex';
+        servicePopup.style.display = 'none';
+    });
+
+
+    // ================= DELETE =================
+    const deleteServiceModal = document.getElementById('deleteServiceModal');
+    const deleteServiceBtn = document.getElementById('deleteServiceBtn');
+    const deleteServiceId = document.getElementById('deleteServiceId');
+    const cancelServiceDelete = document.getElementById('cancelServiceDelete');
+
+    deleteServiceBtn.addEventListener('click', () => {
+        deleteServiceId.value = serviceImage.dataset.id;
+        deleteServiceModal.style.display = 'flex';
+        servicePopup.style.display = 'none';
+    });
+
+    cancelServiceDelete.addEventListener('click', () => {
+        deleteServiceModal.style.display = 'none';
+    });
+
+
+    // ================= CLOSE =================
+    document.querySelectorAll('.close-popup').forEach(el => {
+        el.addEventListener('click', () => {
+            el.closest('.artwork-popup').style.display = 'none';
+        });
+    });
 </script>
 
 @endsection

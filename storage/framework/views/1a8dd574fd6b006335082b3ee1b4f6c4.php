@@ -78,6 +78,25 @@
             grid-template-columns: repeat(2, 1fr);
         }
     }
+
+    /* FORCE POPUP HIDDEN */
+    #servicePopup {
+        display: none;
+    }
+
+    /* pastikan overlay benar */
+    .artwork-popup {
+        display: none;
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        justify-content: center;
+        align-items: center;
+        z-index: 99999 !important;
+    }
 </style>
 
 <div class="container-fluid" style="padding-bottom: 80px;">
@@ -108,7 +127,16 @@
                 <img src="<?php echo e($item->preview_url ?? $item->file_url); ?>" alt="art">
             </a>
             <?php else: ?>
-            <a href="javascript:void(0)">
+            <a href="javascript:void(0)"
+                class="service-trigger"
+                data-id="<?php echo e($item->service_id); ?>"
+                data-title="<?php echo e($item->title); ?>"
+                data-price="<?php echo e($item->price); ?>"
+                data-description="<?php echo e($item->description); ?>"
+                data-image="<?php echo e($item->image_url); ?>"
+                data-user-name="<?php echo e($item->artist->name ?? 'Unknown'); ?>"
+                data-user-avatar="<?php echo e($item->artist->avatar ?? '/default-avatar.png'); ?>"
+
                 <img src="<?php echo e($item->image_url); ?>" alt="service">
 
                 
@@ -133,7 +161,9 @@
 </div>
 
 <?php echo $__env->make('layouts.botnav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php echo $__env->make('commission.show', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+<script src="<?php echo e(asset('js/service-popup.js')); ?>"></script>
 
 <?php $__env->stopSection(); ?>
-
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\User\Documents\ade\aneris\resources\views/page/explore.blade.php ENDPATH**/ ?>

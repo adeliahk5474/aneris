@@ -8,66 +8,68 @@ use Illuminate\Support\Facades\Auth;
 
 class CommissionServiceController extends Controller
 {
-    // ---------------------------
-    // EDIT
-    // ---------------------------
-    public function edit($id)
+    /* ===============================
+        SHOW (optional - untuk halaman detail nanti)
+    ================================ */
+    public function show($id)
     {
         $service = CommissionService::where('service_id', $id)->firstOrFail();
 
-        if ($service->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized');
-        }
-
-        return view('commission.edit', compact('service'));
+        return view('commission.detail', compact('service'));
     }
 
-    // ---------------------------
-    // UPDATE
-    // ---------------------------
+    /* ===============================
+        UPDATE
+    ================================ */
     public function update(Request $request, $id)
     {
-        $service = CommissionService::where('service_id', $id)->firstOrFail();
+        $service = CommissionService::findOrFail($id);
 
-        if ($service->user_id !== Auth::id()) {
+        // 🔒 Cek ownership (WAJIB)
+        if ($service->artist_id !== Auth::id()) {
             abort(403, 'Unauthorized');
         }
 
+        // ✅ Validasi
         $request->validate([
-            'title' => 'required|string|max:255',
-            'price' => 'required|numeric|min:1',
+            'title'       => 'required|string|max:255',
+            'price'       => 'required|numeric|min:1',
             'description' => 'required|string',
-            'category_id' => 'uuid|nullable',
-            'image' => 'nullable|image',
+            'category_id' => 'nullable|exists:categories,category_id',
+            'image'       => 'nullable|image|mimes:png,jpg,jpeg|max:4096',
         ]);
 
+        // 📷 Update image (jika ada)
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('commission', 'public');
+            $path = $request->file('image')->store('commission_services', 'public');
             $service->image_url = asset('storage/' . $path);
         }
 
-        $service->title = $request->title;
-        $service->price = $request->price;
-        $service->description = $request->description;
-        $service->category_id = $request->category_id;
-        $service->save();
+        // 📝 Update data
+        $service->update([
+            'title'       => $request->title,
+            'price'       => $request->price,
+            'description' => $request->description,
+            'category_id' => $request->category_id,
+        ]);
 
-        return redirect()->route('home')->with('success', 'Commission updated.');
+        return back()->with('success', 'Commission updated.');
     }
 
-    // ---------------------------
-    // DELETE
-    // ---------------------------
+    /* ===============================
+        DELETE
+    ================================ */
     public function destroy($id)
     {
-        $service = CommissionService::where('service_id', $id)->firstOrFail();
+        $service = CommissionService::findOrFail($id);
 
-        if ($service->user_id !== Auth::id()) {
+        // 🔒 Cek ownership
+        if ($service->artist_id !== Auth::id()) {
             abort(403, 'Unauthorized');
         }
 
         $service->delete();
 
-        return redirect()->route('home')->with('success', 'Commission deleted.');
+        return back()->with('success', 'Commission deleted.');
     }
 }

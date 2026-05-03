@@ -80,6 +80,25 @@
             grid-template-columns: repeat(2, 1fr);
         }
     }
+
+    /* FORCE POPUP HIDDEN */
+    #servicePopup {
+        display: none;
+    }
+
+    /* pastikan overlay benar */
+    .artwork-popup {
+        display: none;
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        justify-content: center;
+        align-items: center;
+        z-index: 99999 !important;
+    }
 </style>
 
 <div class="container-fluid" style="padding-bottom: 80px;">
@@ -110,7 +129,16 @@
                 <img src="{{ $item->preview_url ?? $item->file_url }}" alt="art">
             </a>
             @else
-            <a href="javascript:void(0)">
+            <a href="javascript:void(0)"
+                class="service-trigger"
+                data-id="{{ $item->service_id }}"
+                data-title="{{ $item->title }}"
+                data-price="{{ $item->price }}"
+                data-description="{{ $item->description }}"
+                data-image="{{ $item->image_url }}"
+                data-user-name="{{ $item->artist->name ?? 'Unknown' }}"
+                data-user-avatar="{{ $item->artist->avatar ?? '/default-avatar.png' }}"
+
                 <img src="{{ $item->image_url }}" alt="service">
 
                 {{-- label kecil --}}
@@ -135,5 +163,8 @@
 </div>
 
 @include('layouts.botnav')
+@include('commission.show')
+
+<script src="{{ asset('js/service-popup.js') }}"></script>
 
 @endsection

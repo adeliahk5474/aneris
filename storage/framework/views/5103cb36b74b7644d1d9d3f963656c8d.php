@@ -101,7 +101,7 @@
             <div style="position:relative;">
                 <input type="password" id="loginPassword" name="password" placeholder="Password" required>
                 <span onclick="togglePassword('loginPassword', this)"
-                    style="position:absolute;right:15px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:12px;color:#555;">
+                    style="position:absolute;right:1px;top:40%;transform:translateY(-50%);cursor:pointer;font-size:12px;color:#555;">
                     Show
                 </span>
             </div>
@@ -117,7 +117,7 @@
             <div style="position:relative;">
                 <input type="password" id="registerPassword" name="password" placeholder="Password" required>
                 <span onclick="togglePassword('registerPassword', this)"
-                    style="position:absolute;right:15px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:12px;color:#555;">
+                    style="position:absolute;right:1px;top:40%;transform:translateY(-50%);cursor:pointer;font-size:12px;color:#555;">
                     Show
                 </span>
             </div>
@@ -125,7 +125,7 @@
             <div style="position:relative;">
                 <input type="password" id="confirmPassword" name="password_confirmation" placeholder="Confirm Password" required>
                 <span onclick="togglePassword('confirmPassword', this)"
-                    style="position:absolute;right:15px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:12px;color:#555;">
+                    style="position:absolute;right:1px;top:40%;transform:translateY(-50%);cursor:pointer;font-size:12px;color:#555;">
                     Show
                 </span>
             </div>
