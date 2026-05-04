@@ -79,13 +79,19 @@
         position: fixed;
         bottom: 0;
         left: 0;
-        width: 100%;
+
+        width: 100vw;
+        /* penting */
+        max-width: 100%;
+
         background: #fff;
         border-top: 1px solid #ddd;
         padding: 10px;
+
         display: flex;
         gap: 10px;
-        z-index: 999;
+
+        z-index: 2000;
     }
 
     .bottom-bar button {
@@ -103,6 +109,44 @@
     .btn-order {
         background: #4f46e5;
         color: #fff;
+    }
+
+    body {
+        overflow-x: hidden;
+    }
+
+    /* turunkan botnav */
+    nav,
+    .botnav,
+    .bottom-nav {
+        z-index: 1000 !important;
+    }
+
+    /* ================= POPUP FIX ================= */
+    .artwork-popup {
+        display: none;
+        position: fixed;
+        /* WAJIB */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+
+        background: rgba(0, 0, 0, 0.7);
+
+        justify-content: center;
+        align-items: center;
+
+        z-index: 99999;
+        /* pastikan di atas semua */
+    }
+
+    /* biar modalnya center & rapi */
+    .artwork-popup-content {
+        background: #fff;
+        width: 90%;
+        max-width: 400px;
+        border-radius: 10px;
     }
 </style>
 
@@ -149,16 +193,17 @@
 <div class="bottom-bar">
     <button class="btn-chat">Chat</button>
 
-    <button id="openOrderBtn"
+    <button id="orderNowBtn"
         data-id="{{ $service->service_id }}"
         data-title="{{ $service->title }}"
         data-price="{{ $service->price }}"
-        class="btn btn-dark w-100">
+        class="btn btn-dark">
         Order Now
     </button>
 </div>
 
 @include('commission.order')
+@include('commission.payment')
 <script src="{{ asset('js/order-popup.js') }}"></script>
 
 @endsection

@@ -84,18 +84,33 @@
         display: none;
     }
 
-    /* pastikan overlay benar */
+    /* ================= POPUP FIX ================= */
     .artwork-popup {
         display: none;
-        position: fixed !important;
+        position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
+
         background: rgba(0, 0, 0, 0.8);
+
         justify-content: center;
         align-items: center;
-        z-index: 99999 !important;
+
+        z-index: 9999;
+    }
+
+    .artwork-popup-content {
+        background: #fff;
+        width: 90%;
+        max-width: 400px;
+        border-radius: 10px;
+
+        position: relative;
+
+        max-height: 90vh;
+        overflow-y: auto;
     }
 </style>
 
@@ -162,8 +177,13 @@
 
 <?php echo $__env->make('layouts.botnav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <?php echo $__env->make('commission.show', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php echo $__env->make('commission.order', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php echo $__env->make('commission.payment', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-<script src="<?php echo e(asset('js/service-popup.js')); ?>"></script>
+<script src="<?php echo e(asset('js/explore-popup.js')); ?>"></script>
+<script src="<?php echo e(asset('js/order-popup.js')); ?>"></script>
+
 
 <?php $__env->stopSection(); ?>
+
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\User\Documents\ade\aneris\resources\views/page/explore.blade.php ENDPATH**/ ?>

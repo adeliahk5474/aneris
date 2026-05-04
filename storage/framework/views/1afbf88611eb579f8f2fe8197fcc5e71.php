@@ -1,10 +1,10 @@
-@php
+<?php
 $hideBottomNavbar = true;
-@endphp
+?>
 
-@extends('layouts.app')
 
-@section('content')
+
+<?php $__env->startSection('content'); ?>
 
 <style>
     .dashboard {
@@ -124,145 +124,149 @@ $hideBottomNavbar = true;
 <div class="dashboard">
 
     ```
-    {{-- HEADER --}}
+    
     <div class="dashboard-header">
-        <a href="{{ route('profile.show', auth()->id()) }}">← Back</a>
+        <a href="<?php echo e(route('profile.show', auth()->id())); ?>">← Back</a>
 
         <h3>Artist Dashboard</h3>
 
         <div style="display:flex;align-items:center;gap:10px;">
-            <img src="{{ $artist->avatar ?? '/default-avatar.png' }}">
-            <b>{{ $artist->name }}</b>
+            <img src="<?php echo e($artist->avatar ?? '/default-avatar.png'); ?>">
+            <b><?php echo e($artist->name); ?></b>
         </div>
     </div>
 
-    {{-- STAT --}}
+    
     <div class="grid-4 mb-3">
 
         <div class="card-box text-center">
             <div>Active</div>
-            <b>{{ $activeCommissions }}</b>
+            <b><?php echo e($activeCommissions); ?></b>
         </div>
 
         <div class="card-box text-center">
             <div>Earnings</div>
-            <b>Rp {{ number_format($totalEarnings,0,',','.') }}</b>
+            <b>Rp <?php echo e(number_format($totalEarnings,0,',','.')); ?></b>
         </div>
 
         <div class="card-box text-center">
             <div>Rating</div>
-            <b>{{ $averageRating ? number_format($averageRating,1).'★' : '-' }}</b>
+            <b><?php echo e($averageRating ? number_format($averageRating,1).'★' : '-'); ?></b>
         </div>
 
         <div class="card-box text-center">
             <div>Services</div>
-            <b>{{ $totalServices }}</b>
+            <b><?php echo e($totalServices); ?></b>
         </div>
 
     </div>
 
-    {{-- INSIGHT --}}
+    
     <div class="grid-3 mb-4">
 
         <div class="card-box text-center">
             <div>Clients</div>
-            <b>{{ $activeClients }}</b>
+            <b><?php echo e($activeClients); ?></b>
         </div>
 
         <div class="card-box text-center">
             <div>Pending</div>
-            <b>{{ $pendingCommissions }}</b>
+            <b><?php echo e($pendingCommissions); ?></b>
         </div>
 
         <div class="card-box text-center">
             <div>Notif</div>
-            <b>{{ $recentNotifications }}</b>
+            <b><?php echo e($recentNotifications); ?></b>
         </div>
 
     </div>
 
-    {{-- GRAPH --}}
+    
     <div class="card-box mb-4">
         <h5>Monthly Earnings</h5>
         <canvas id="chart"></canvas>
     </div>
 
-    {{-- ORDER MASUK --}}
+    
     <div class="card-box">
         <h5>Incoming Orders</h5>
 
-        @forelse($incomingOrders as $order)
+        <?php $__empty_1 = true; $__currentLoopData = $incomingOrders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
 
         <div class="order-card">
 
             <div class="order-title">
-                {{ $order->service->title ?? 'Service' }}
+                <?php echo e($order->service->title ?? 'Service'); ?>
+
             </div>
 
             <div class="order-meta">
-                Client: {{ $order->client->name ?? 'Unknown' }}
+                Client: <?php echo e($order->client->name ?? 'Unknown'); ?>
+
             </div>
 
             <div class="order-meta">
-                Rp {{ number_format($order->total_price,0,',','.') }}
+                Rp <?php echo e(number_format($order->total_price,0,',','.')); ?>
+
             </div>
 
             <div class="status
-                @if($order->status=='pending') status-pending
-                @elseif($order->status=='in_progress') status-progress
-                @elseif($order->status=='completed') status-done
-                @elseif($order->status=='canceled') status-cancel
-                @endif
+                <?php if($order->status=='pending'): ?> status-pending
+                <?php elseif($order->status=='in_progress'): ?> status-progress
+                <?php elseif($order->status=='completed'): ?> status-done
+                <?php elseif($order->status=='canceled'): ?> status-cancel
+                <?php endif; ?>
             ">
-                {{ strtoupper($order->status) }}
+                <?php echo e(strtoupper($order->status)); ?>
+
             </div>
 
-            {{-- ACTION --}}
+            
             <div style="display:flex;gap:6px;margin-top:6px;">
 
-                @if($order->status=='pending')
-                <form method="POST" action="{{ route('order.accept') }}">
-                    @csrf
-                    <input type="hidden" name="order_id" value="{{ $order->order_id }}">
+                <?php if($order->status=='pending'): ?>
+                <form method="POST" action="<?php echo e(route('order.accept')); ?>">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="order_id" value="<?php echo e($order->order_id); ?>">
                     <button class="btn-sm btn-green">Accept</button>
                 </form>
 
-                <form method="POST" action="{{ route('order.reject') }}">
-                    @csrf
-                    <input type="hidden" name="order_id" value="{{ $order->order_id }}">
+                <form method="POST" action="<?php echo e(route('order.reject')); ?>">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="order_id" value="<?php echo e($order->order_id); ?>">
                     <button class="btn-sm btn-red">Reject</button>
                 </form>
-                @endif
+                <?php endif; ?>
 
-                @if($order->status=='in_progress')
+                <?php if($order->status=='in_progress'): ?>
 
-                <form method="POST" action="{{ route('order.complete') }}" enctype="multipart/form-data" style="display:flex;gap:6px;align-items:center;">
-                    @csrf
-                    <input type="hidden" name="order_id" value="{{ $order->order_id }}">
+                <form method="POST" action="<?php echo e(route('order.complete')); ?>" enctype="multipart/form-data" style="display:flex;gap:6px;align-items:center;">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="order_id" value="<?php echo e($order->order_id); ?>">
 
-                    {{-- upload --}}
+                    
                     <input type="file" name="result_file" required style="font-size:12px;">
 
-                    {{-- tombol done --}}
+                    
                     <button class="btn-sm btn-blue">Done</button>
                 </form>
 
-                @endif
+                <?php endif; ?>
 
             </div>
 
         </div>
 
-        @empty
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
         <p>No orders</p>
-        @endforelse
+        <?php endif; ?>
 
     </div>
     ```
 
 </div>
 
-{{-- CHART --}}
+
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -272,9 +276,9 @@ $hideBottomNavbar = true;
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: @json($monthlyLabels),
+            labels: <?php echo json_encode($monthlyLabels, 15, 512) ?>,
             datasets: [{
-                data: @json($monthlyEarnings),
+                data: <?php echo json_encode($monthlyEarnings, 15, 512) ?>,
                 borderColor: '#4f46e5',
                 backgroundColor: 'rgba(79,70,229,0.2)',
                 fill: true
@@ -291,4 +295,5 @@ $hideBottomNavbar = true;
     });
 </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\User\Documents\ade\aneris\resources\views/dashboards/artist.blade.php ENDPATH**/ ?>

@@ -86,18 +86,33 @@
         display: none;
     }
 
-    /* pastikan overlay benar */
+    /* ================= POPUP FIX ================= */
     .artwork-popup {
         display: none;
-        position: fixed !important;
+        position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
+
         background: rgba(0, 0, 0, 0.8);
+
         justify-content: center;
         align-items: center;
-        z-index: 99999 !important;
+
+        z-index: 9999;
+    }
+
+    .artwork-popup-content {
+        background: #fff;
+        width: 90%;
+        max-width: 400px;
+        border-radius: 10px;
+
+        position: relative;
+
+        max-height: 90vh;
+        overflow-y: auto;
     }
 </style>
 
@@ -164,7 +179,11 @@
 
 @include('layouts.botnav')
 @include('commission.show')
+@include('commission.order')
+@include('commission.payment')
 
-<script src="{{ asset('js/service-popup.js') }}"></script>
+<script src="{{ asset('js/explore-popup.js') }}"></script>
+<script src="{{ asset('js/order-popup.js') }}"></script>
+
 
 @endsection

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,20 +41,15 @@
             
             <div class="d-flex align-items-center">
 
-                
+
                 <a href="<?php echo e(route('explore')); ?>" class="text-dark mx-2">
                     <i class="bi bi-heart fs-4"></i>
                 </a>
 
-                
-                <?php if(Route::has('cart.index')): ?>
-                    <a href="<?php echo e(route('cart.index')); ?>" class="text-dark mx-2">
-                        <i class="bi bi-bag fs-4"></i>
-                    </a>
-                <?php else: ?>
-                    <a href="#" class="text-dark mx-2">
-                        <i class="bi bi-bag fs-4"></i>
-                    </a>
+                <?php if(auth()->guard()->check()): ?>
+                <a href="<?php echo e(route('cart.index')); ?>" class="text-dark mx-2">
+                    <i class="bi bi-bag fs-4"></i>
+                </a>
                 <?php endif; ?>
 
             </div>
@@ -73,5 +69,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
+
 </html>
 <?php /**PATH C:\Users\User\Documents\ade\aneris\resources\views/layouts/app.blade.php ENDPATH**/ ?>

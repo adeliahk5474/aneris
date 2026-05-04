@@ -10,26 +10,34 @@ return new class extends Migration {
         Schema::create('chats', function (Blueprint $table) {
             $table->uuid('chat_id')->primary();
 
-            $table->uuid('commission_id')->nullable();
-            $table->foreign('commission_id')
-                  ->references('commission_request_id')
-                  ->on('commission_requests')
+            // 🔥 OPTIONAL → kalau ini chat commission
+            $table->uuid('order_id')->nullable();
+            $table->foreign('order_id')
+                  ->references('order_id')
+                  ->on('orders')
                   ->onDelete('cascade');
 
-            $table->uuid('sender_id')->nullable();
+            // 🔥 USER RELATION (WAJIB)
+            $table->uuid('sender_id');
             $table->foreign('sender_id')
                   ->references('user_id')
                   ->on('users')
-                  ->nullOnDelete();
+                  ->cascadeOnDelete();
 
-            $table->uuid('receiver_id')->nullable();
+            $table->uuid('receiver_id');
             $table->foreign('receiver_id')
                   ->references('user_id')
                   ->on('users')
-                  ->nullOnDelete();
+                  ->cascadeOnDelete();
 
+            // 🔥 CONTENT
             $table->text('message')->nullable();
-            $table->timestampTz('sent_at')->useCurrent();
+            $table->string('image')->nullable();
+
+            // 🔥 STATUS
+            $table->boolean('is_read')->default(false);
+
+            $table->timestampsTz();
         });
     }
 

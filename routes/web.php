@@ -15,6 +15,8 @@ use App\Http\Controllers\ArtistDashboardController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\EditController;
 use App\Http\Controllers\CommissionServiceController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ChatController;
 
 // ===============================
 // HOME / HOMEPAGE
@@ -75,24 +77,33 @@ Route::delete('/commission/{id}', [CommissionServiceController::class, 'destroy'
     ->name('commission.delete');
 Route::post('/order', [OrderController::class, 'store'])
     ->name('order.store');
+Route::post('/order/pay', [OrderController::class, 'pay'])->name('order.pay');
 // ===============================
 // CART
 // ===============================
-Route::post('/cart/add', [CartController::class, 'add'])
-    ->name('cart.add');
+Route::get('/cart', [OrderController::class, 'cart'])
+    ->middleware('auth')
+    ->name('cart.index');
+Route::post('/order/accept', [OrderController::class, 'accept'])->name('order.accept');
+Route::post('/order/reject', [OrderController::class, 'reject'])->name('order.reject');
+Route::post('/order/complete', [OrderController::class, 'complete'])->name('order.complete');
 
 
 // ===============================
 // UI Pages (frontend-only views)
 // ===============================
-Route::get('/chat', function () {
-    return view('pages.chat_index');
-})->name('chat.index')->middleware('auth');
 
-Route::get('/chat/{id}', function ($id) {
-    $chat = \App\Models\Chat::where('chat_id', $id)->firstOrFail();
-    return view('pages.chat_thread', ['chat' => $chat]);
-})->name('chat.thread')->middleware('auth');
+// 🔥 chat list (inbox)
+Route::get('/chat', [ChatController::class, 'list'])->name('chat.list');
+
+// 🔥 chat thread (DM / ORDER)
+Route::get('/chat/thread', [ChatController::class, 'index'])->name('chat.index');
+
+// 🔥 kirim chat
+Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
+
+// 🔥 auto refresh (optional)
+Route::get('/chat/fetch', [ChatController::class, 'fetch'])->name('chat.fetch');
 
 Route::get('/notifications', function () {
     return view('pages.notifications');

@@ -1,4 +1,4 @@
-{{-- resources/views/commission/order.blade.php --}}
+
 
 <div class="artwork-popup" id="orderPopup">
     <div class="artwork-popup-content" style="max-width:400px;">
@@ -7,23 +7,23 @@
 
         <h5 style="margin-bottom:10px;">Order Commission</h5>
 
-        <form method="POST" action="{{ route('order.store') }}">
-            @csrf
+        <form method="POST" action="<?php echo e(route('order.store')); ?>">
+            <?php echo csrf_field(); ?>
 
             <input type="hidden" name="service_id" id="orderServiceId">
 
-            {{-- SERVICE INFO --}}
+            
             <div style="margin-bottom:10px;">
                 <b id="orderTitle"></b><br>
                 <span id="orderPrice" style="color:#555;"></span>
             </div>
 
-            {{-- NOTE --}}
+            
             <label>Request / Note</label>
             <textarea name="note" class="form-control mb-2" rows="3"
                 placeholder="Describe what you want..."></textarea>
 
-            {{-- PAYMENT METHOD --}}
+            
             <label>Payment Method</label>
             <select name="payment_method" class="form-control mb-3" required>
                 <option value="">-- Choose Payment --</option>
@@ -38,3 +38,4 @@
 
     </div>
 </div>
+<?php /**PATH C:\Users\User\Documents\ade\aneris\resources\views/commission/order.blade.php ENDPATH**/ ?>

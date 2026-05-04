@@ -9,20 +9,27 @@ class Chat extends Model
 {
     use HasFactory;
 
+    protected $table = 'chats';
+    protected $primaryKey = 'chat_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     protected $fillable = [
         'chat_id',
         'order_id',
         'sender_id',
         'receiver_id',
         'message',
+        'image',
         'is_read',
     ];
 
-    protected $primaryKey = 'chat_id';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    protected $casts = [
+        'is_read' => 'boolean',
+    ];
 
-    // ===== RELATIONS =====
+    // ================= RELATIONS =================
+
     public function order()
     {
         return $this->belongsTo(Order::class, 'order_id');
@@ -30,11 +37,24 @@ class Chat extends Model
 
     public function sender()
     {
-        return $this->belongsTo(User::class, 'sender_id');
+        return $this->belongsTo(User::class, 'sender_id', 'user_id');
     }
 
     public function receiver()
     {
-        return $this->belongsTo(User::class, 'receiver_id');
+        return $this->belongsTo(User::class, 'receiver_id', 'user_id');
+    }
+
+    // ================= HELPER =================
+
+    // cek ini DM atau order chat
+    public function isOrderChat()
+    {
+        return !is_null($this->order_id);
+    }
+
+    public function isDM()
+    {
+        return is_null($this->order_id);
     }
 }
