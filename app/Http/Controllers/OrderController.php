@@ -19,10 +19,8 @@ class OrderController extends Controller
             'note' => 'nullable|string'
         ]);
 
-        // ambil service
         $service = CommissionService::where('service_id', $request->service_id)->firstOrFail();
 
-        // simpan order
         Order::create([
             'order_id' => Str::uuid(),
 
@@ -48,10 +46,8 @@ class OrderController extends Controller
             'note' => 'nullable|string'
         ]);
 
-        // ambil service
         $service = CommissionService::where('service_id', $request->service_id)->firstOrFail();
 
-        // simpan order
         Order::create([
             'order_id' => Str::uuid(),
 
@@ -59,7 +55,6 @@ class OrderController extends Controller
             'client_id' => Auth::user()->user_id,
             'artist_id' => $service->artist_id,
 
-            // ambil dari popup payment (kalau ada)
             'note' => $request->note,
             'payment_method' => $request->payment_method,
 
@@ -81,11 +76,13 @@ class OrderController extends Controller
         return view('pages.cart', compact('orders'));
     }
 
+    /* =========================
+       ARTIST ACCEPT ORDER
+    ========================= */
     public function accept(Request $request)
     {
         $order = Order::where('order_id', $request->order_id)->firstOrFail();
 
-        // optional: pastikan hanya artist terkait yang bisa ubah
         if ($order->artist_id !== auth()->user()->user_id) {
             abort(403);
         }
@@ -110,7 +107,12 @@ class OrderController extends Controller
         return back()->with('success', 'Order rejected');
     }
 
-    public function complete(Request $request)
+    /* =========================
+       ARTIST SEND RESULT
+       (sketsa / coloring)
+       masuk ke waiting client
+    ========================= */
+    public function sendToClient(Request $request)
     {
         $order = Order::where('order_id', $request->order_id)->firstOrFail();
 
@@ -118,15 +120,57 @@ class OrderController extends Controller
             abort(403);
         }
 
-        // upload file jika ada
         if ($request->hasFile('result_file')) {
             $file = $request->file('result_file')->store('orders', 'public');
             $order->result_file = $file;
         }
 
+        $order->status = 'waiting_client';
+        $order->save();
+
+        return back()->with('success', 'Dikirim ke client untuk review');
+    }
+
+    /* =========================
+       CLIENT REVISION
+       max 2x (logic nanti bisa ditambah counter)
+    ========================= */
+    public function revision(Request $request)
+    {
+        $order = Order::where('order_id', $request->order_id)->firstOrFail();
+
+        if ($order->client_id !== auth()->user()->user_id) {
+            abort(403);
+        }
+
+        if ($order->status !== 'waiting_client') {
+            return back()->with('error', 'Tidak bisa revisi sekarang');
+        }
+
+        $order->status = 'revision';
+        $order->save();
+
+        return back()->with('success', 'Masuk tahap revisi');
+    }
+
+    /* =========================
+       CLIENT ACCEPT FINAL RESULT
+    ========================= */
+    public function acceptFinal(Request $request)
+    {
+        $order = Order::where('order_id', $request->order_id)->firstOrFail();
+
+        if ($order->client_id !== auth()->user()->user_id) {
+            abort(403);
+        }
+
+        if ($order->status !== 'waiting_client') {
+            return back();
+        }
+
         $order->status = 'completed';
         $order->save();
 
-        return back()->with('success', 'Order completed & file uploaded');
+        return back()->with('success', 'Order selesai');
     }
 }

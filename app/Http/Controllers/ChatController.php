@@ -14,40 +14,38 @@ class ChatController extends Controller
 {
     /**
      * ===============================
-     * CHAT LIST (HYBRID: DM + ORDER)
+     * CHAT LIST (HYBRID)
      * ===============================
      */
     public function list()
     {
         $userId = Auth::user()->user_id;
 
-        // 🔥 Ambil semua chat terakhir (group by conversation)
-        $chats = Chat::where(function ($q) use ($userId) {
+        $chats = Chat::with(['sender', 'receiver'])
+            ->where(function ($q) use ($userId) {
                 $q->where('sender_id', $userId)
-                  ->orWhere('receiver_id', $userId);
+                    ->orWhere('receiver_id', $userId);
             })
             ->latest()
             ->get();
 
-        // 🔥 Group manual (biar fleksibel)
         $conversations = $chats->groupBy(function ($chat) use ($userId) {
 
-            // ORDER CHAT
             if ($chat->order_id) {
-                return 'order_'.$chat->order_id;
+                return 'order_' . $chat->order_id;
             }
 
-            // DM CHAT (pair user)
             $otherUser = $chat->sender_id == $userId
                 ? $chat->receiver_id
                 : $chat->sender_id;
 
-            return 'dm_'.$otherUser;
+            return 'dm_' . $otherUser;
+
         })->map(function ($group) {
-            return $group->first(); // ambil last message
+            return $group->first();
         });
 
-        return view('pages.chat-list', compact('conversations'));
+        return view('pages.chat_list', compact('conversations'));
     }
 
     /**
@@ -62,54 +60,68 @@ class ChatController extends Controller
         $order_id = $request->order_id;
         $user_id  = $request->user_id;
 
-        // ===============================
-        // ORDER CHAT
-        // ===============================
+        /**
+         * ORDER CHAT
+         */
         if ($order_id) {
 
-            $order = Order::with(['client', 'artist'])->findOrFail($order_id);
+            $order = Order::with(['client', 'artist'])
+                ->where('order_id', $order_id)
+                ->firstOrFail();
+
+            $otherUser = $order->client_id == $userId
+                ? $order->artist
+                : $order->client;
 
             $chats = Chat::with(['sender'])
                 ->where('order_id', $order_id)
                 ->orderBy('created_at', 'asc')
                 ->get();
 
-            // mark read
             Chat::where('order_id', $order_id)
                 ->where('receiver_id', $userId)
                 ->update(['is_read' => true]);
 
-            return view('pages.chat', compact('chats', 'order'));
+            return view('pages.chat_thread', compact(
+                'chats',
+                'order',
+                'otherUser'
+            ));
         }
 
-        // ===============================
-        // DM CHAT
-        // ===============================
+        /**
+         * DM CHAT
+         */
         if ($user_id) {
 
-            $otherUser = User::findOrFail($user_id);
+            $otherUser = User::where('user_id', $user_id)
+                ->firstOrFail();
 
             $chats = Chat::with(['sender'])
                 ->whereNull('order_id')
                 ->where(function ($q) use ($userId, $user_id) {
+
                     $q->where(function ($q2) use ($userId, $user_id) {
                         $q2->where('sender_id', $userId)
-                           ->where('receiver_id', $user_id);
+                            ->where('receiver_id', $user_id);
                     })->orWhere(function ($q2) use ($userId, $user_id) {
                         $q2->where('sender_id', $user_id)
-                           ->where('receiver_id', $userId);
+                            ->where('receiver_id', $userId);
                     });
+
                 })
                 ->orderBy('created_at', 'asc')
                 ->get();
 
-            // mark read
             Chat::whereNull('order_id')
                 ->where('receiver_id', $userId)
                 ->where('sender_id', $user_id)
                 ->update(['is_read' => true]);
 
-            return view('pages.chat', compact('chats', 'otherUser'));
+            return view('pages.chat_thread', compact(
+                'chats',
+                'otherUser'
+            ));
         }
 
         abort(404);
@@ -117,7 +129,7 @@ class ChatController extends Controller
 
     /**
      * ===============================
-     * SEND CHAT (DM + ORDER)
+     * SEND CHAT
      * ===============================
      */
     public function send(Request $request)
@@ -132,12 +144,13 @@ class ChatController extends Controller
         $path = null;
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('chat_images', 'public');
+            $path = $request->file('image')
+                ->store('chat_images', 'public');
         }
 
         Chat::create([
             'chat_id' => Str::uuid(),
-            'order_id' => $request->order_id, // null = DM
+            'order_id' => $request->order_id,
             'sender_id' => Auth::user()->user_id,
             'receiver_id' => $request->receiver_id,
             'message' => $request->message,
@@ -150,7 +163,7 @@ class ChatController extends Controller
 
     /**
      * ===============================
-     * AUTO REFRESH (OPTIONAL)
+     * FETCH CHAT (REALTIME SUPPORT)
      * ===============================
      */
     public function fetch(Request $request)
@@ -160,27 +173,44 @@ class ChatController extends Controller
         $order_id = $request->order_id;
         $user_id  = $request->user_id;
 
+        /**
+         * ORDER CHAT
+         */
         if ($order_id) {
-            $chats = Chat::with('sender')
+
+            $chats = Chat::with(['sender'])
                 ->where('order_id', $order_id)
                 ->orderBy('created_at', 'asc')
                 ->get();
-        } else {
-            $chats = Chat::with('sender')
-                ->whereNull('order_id')
-                ->where(function ($q) use ($userId, $user_id) {
-                    $q->where(function ($q2) use ($userId, $user_id) {
-                        $q2->where('sender_id', $userId)
-                           ->where('receiver_id', $user_id);
-                    })->orWhere(function ($q2) use ($userId, $user_id) {
-                        $q2->where('sender_id', $user_id)
-                           ->where('receiver_id', $userId);
-                    });
-                })
-                ->orderBy('created_at', 'asc')
-                ->get();
+
+            return response()->json([
+                'type' => 'order',
+                'data' => $chats
+            ]);
         }
 
-        return response()->json($chats);
+        /**
+         * DM CHAT
+         */
+        $chats = Chat::with(['sender'])
+            ->whereNull('order_id')
+            ->where(function ($q) use ($userId, $user_id) {
+
+                $q->where(function ($q2) use ($userId, $user_id) {
+                    $q2->where('sender_id', $userId)
+                        ->where('receiver_id', $user_id);
+                })->orWhere(function ($q2) use ($userId, $user_id) {
+                    $q2->where('sender_id', $user_id)
+                        ->where('receiver_id', $userId);
+                });
+
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json([
+            'type' => 'dm',
+            'data' => $chats
+        ]);
     }
 }

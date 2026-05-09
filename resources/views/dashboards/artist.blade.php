@@ -13,7 +13,6 @@ $hideBottomNavbar = true;
         padding: 20px;
     }
 
-    /* HEADER */
     .dashboard-header {
         display: flex;
         justify-content: space-between;
@@ -28,7 +27,6 @@ $hideBottomNavbar = true;
         object-fit: cover;
     }
 
-    /* CARD */
     .card-box {
         background: #fff;
         border: 1px solid #eee;
@@ -36,7 +34,6 @@ $hideBottomNavbar = true;
         padding: 16px;
     }
 
-    /* GRID */
     .grid-4 {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -59,7 +56,6 @@ $hideBottomNavbar = true;
         }
     }
 
-    /* ORDER */
     .order-card {
         border: 1px solid #eee;
         border-radius: 10px;
@@ -76,13 +72,13 @@ $hideBottomNavbar = true;
         color: #555;
     }
 
-    /* BUTTON */
     .btn-sm {
         padding: 5px 8px;
         font-size: 12px;
         border: none;
         border-radius: 6px;
         color: #fff;
+        cursor: pointer;
     }
 
     .btn-green {
@@ -97,7 +93,10 @@ $hideBottomNavbar = true;
         background: #2563eb;
     }
 
-    /* STATUS */
+    .btn-purple {
+        background: #7c3aed;
+    }
+
     .status {
         font-size: 12px;
         font-weight: 600;
@@ -112,18 +111,21 @@ $hideBottomNavbar = true;
         color: blue;
     }
 
-    .status-done {
-        color: green;
+    .status-wait {
+        color: #a855f7;
     }
 
-    .status-cancel {
-        color: red;
+    .status-rev {
+        color: #ef4444;
+    }
+
+    .status-done {
+        color: green;
     }
 </style>
 
 <div class="dashboard">
 
-    ```
     {{-- HEADER --}}
     <div class="dashboard-header">
         <a href="{{ route('profile.show', auth()->id()) }}">← Back</a>
@@ -136,58 +138,7 @@ $hideBottomNavbar = true;
         </div>
     </div>
 
-    {{-- STAT --}}
-    <div class="grid-4 mb-3">
-
-        <div class="card-box text-center">
-            <div>Active</div>
-            <b>{{ $activeCommissions }}</b>
-        </div>
-
-        <div class="card-box text-center">
-            <div>Earnings</div>
-            <b>Rp {{ number_format($totalEarnings,0,',','.') }}</b>
-        </div>
-
-        <div class="card-box text-center">
-            <div>Rating</div>
-            <b>{{ $averageRating ? number_format($averageRating,1).'★' : '-' }}</b>
-        </div>
-
-        <div class="card-box text-center">
-            <div>Services</div>
-            <b>{{ $totalServices }}</b>
-        </div>
-
-    </div>
-
-    {{-- INSIGHT --}}
-    <div class="grid-3 mb-4">
-
-        <div class="card-box text-center">
-            <div>Clients</div>
-            <b>{{ $activeClients }}</b>
-        </div>
-
-        <div class="card-box text-center">
-            <div>Pending</div>
-            <b>{{ $pendingCommissions }}</b>
-        </div>
-
-        <div class="card-box text-center">
-            <div>Notif</div>
-            <b>{{ $recentNotifications }}</b>
-        </div>
-
-    </div>
-
-    {{-- GRAPH --}}
-    <div class="card-box mb-4">
-        <h5>Monthly Earnings</h5>
-        <canvas id="chart"></canvas>
-    </div>
-
-    {{-- ORDER MASUK --}}
+    {{-- ORDER --}}
     <div class="card-box">
         <h5>Incoming Orders</h5>
 
@@ -200,27 +151,31 @@ $hideBottomNavbar = true;
             </div>
 
             <div class="order-meta">
-                Client: {{ $order->client->name ?? 'Unknown' }}
+                Client: {{ $order->client->name ?? '-' }}
             </div>
 
             <div class="order-meta">
                 Rp {{ number_format($order->total_price,0,',','.') }}
             </div>
 
+            {{-- STATUS --}}
             <div class="status
                 @if($order->status=='pending') status-pending
                 @elseif($order->status=='in_progress') status-progress
+                @elseif($order->status=='waiting_client') status-wait
+                @elseif($order->status=='revision') status-rev
                 @elseif($order->status=='completed') status-done
-                @elseif($order->status=='canceled') status-cancel
                 @endif
             ">
                 {{ strtoupper($order->status) }}
             </div>
 
             {{-- ACTION --}}
-            <div style="display:flex;gap:6px;margin-top:6px;">
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
 
+                {{-- PENDING --}}
                 @if($order->status=='pending')
+
                 <form method="POST" action="{{ route('order.accept') }}">
                     @csrf
                     <input type="hidden" name="order_id" value="{{ $order->order_id }}">
@@ -234,19 +189,49 @@ $hideBottomNavbar = true;
                 </form>
                 @endif
 
+                {{-- IN PROGRESS (KIRIM SKETSA / COLORING) --}}
                 @if($order->status=='in_progress')
 
-                <form method="POST" action="{{ route('order.complete') }}" enctype="multipart/form-data" style="display:flex;gap:6px;align-items:center;">
+                <form method="POST" action="{{ route('order.sendToClient') }}" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="order_id" value="{{ $order->order_id }}">
 
-                    {{-- upload --}}
-                    <input type="file" name="result_file" required style="font-size:12px;">
+                    <input type="file" name="result_file" required>
 
-                    {{-- tombol done --}}
-                    <button class="btn-sm btn-blue">Done</button>
+                    <button class="btn-sm btn-blue">Send</button>
                 </form>
 
+                @endif
+
+                {{-- WAITING CLIENT --}}
+                @if($order->status=='waiting_client')
+
+                <span style="font-size:12px;color:#555;">
+                    Waiting client response
+                </span>
+
+                @endif
+
+                {{-- REVISION (BACK TO WORK) --}}
+                @if($order->status=='revision')
+
+                <span style="font-size:12px;color:#ef4444;">
+                    Revision requested
+                </span>
+
+                <form method="POST" action="{{ route('chat.index') }}">
+                    @csrf
+                    <input type="hidden" name="user_id" value="{{ $order->client_id }}">
+                    <button class="btn-sm btn-purple">Chat Client</button>
+                </form>
+
+                @endif
+
+                {{-- COMPLETED --}}
+                @if($order->status=='completed')
+                <span style="font-size:12px;color:green;">
+                    Completed
+                </span>
                 @endif
 
             </div>
@@ -258,37 +243,7 @@ $hideBottomNavbar = true;
         @endforelse
 
     </div>
-    ```
 
 </div>
-
-{{-- CHART --}}
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-    const ctx = document.getElementById('chart');
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: @json($monthlyLabels),
-            datasets: [{
-                data: @json($monthlyEarnings),
-                borderColor: '#4f46e5',
-                backgroundColor: 'rgba(79,70,229,0.2)',
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-</script>
 
 @endsection

@@ -9,6 +9,7 @@
         "php": "^8.2",
         "aws/aws-sdk-php": "^3.363",
         "blade-ui-kit/blade-heroicons": "^2.6",
+        "doctrine/dbal": "^4.4",
         "filament/filament": "4.0",
         "guzzlehttp/guzzle": "^7.10",
         "laravel/framework": "^12.0",

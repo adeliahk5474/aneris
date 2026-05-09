@@ -50,11 +50,17 @@
         margin: 10px;
     }
 
+    .action-buttons form,
     .action-buttons a,
     .action-buttons button {
         flex: 1;
-        padding: 7px 0;
+    }
+
+    .action-buttons .btn {
+        width: 100%;
+        padding: 10px 0;
         font-size: 14px;
+        border-radius: 8px;
     }
 
     /* ================= TABS ================= */
@@ -236,91 +242,142 @@
     {{-- STATS --}}
     <div class="stats">
         <div><b>{{ $artworks->count() }}</b><br>Posts</div>
-        <div><b>0</b><br>Followers</div>
-        <div><b>0</b><br>Following</div>
-    </div>
+        <div>
+            <b>{{ $user->followers()->count() }}</b><br>
+            Followers
+        </div>
 
-    {{-- ROLE BUTTON --}}
-    @if($user->role === 'artist' && $isOwner)
-    <div class="px-3">
-        <a href="{{ route('artist.dashboard') }}" class="btn btn-dark w-100">Dashboard Artist</a>
-    </div>
-    @endif
-
-    {{-- ACTION BUTTONS --}}
-    <div class="action-buttons">
-        @if($isOwner)
-        <button type="button" class="btn btn-outline-secondary btn-edit-profile">Edit Profile</button>
-        <button type="button" class="btn btn-outline-secondary btn-share-profile">Share Profile</button>
-        @else
-        <button class="btn btn-primary">Follow</button>
-        <button class="btn btn-dark">Message</button>
-        @endif
-    </div>
-
-    {{-- TABS --}}
-    <div class="profile-tabs">
-        <a class="active" id="tab-artwork">Artwork</a>
-        @if($user->role === 'artist')
-        <a id="tab-commission">Commission</a>
-        <a id="tab-reviews">Reviews</a>
-        @else
-        @if($isOwner)
-        <a id="tab-orders">Orders</a>
-        @endif
-        @endif
-    </div>
-
-    {{-- TAB CONTENT --}}
-    <div id="tab-artwork-content" class="grid-art tab-content" style="display:grid;">
-        @foreach($artworks as $art)
-        <a href="javascript:void(0)" class="artwork-trigger"
-            data-id="{{ $art->artwork_id }}"
-            data-caption="{{ $art->caption }}"
-            data-image="{{ $art->image_url }}"
-            data-likes="{{ $art->likes ?? 0 }}"
-            data-comments="{{ $art->comments ?? 0 }}"
-            data-shares="{{ $art->shares ?? 0 }}"
-            data-user-name="{{ $art->user->name ?? 'Unknown Artist' }}"
-            data-user-avatar="{{ $art->user->avatar ?? '/default-avatar.png' }}">
-            <img src="{{ $art->image_url }}" alt="Artwork">
-        </a>
-        @endforeach
-    </div>
-
-
-    <div id="tab-commission-content" class="tab-content" style="display:none;">
-        <div class="grid-art">
-            @forelse($commissionServices as $service)
-            <a href="javascript:void(0)"
-                class="service-trigger"
-                data-id="{{ $service->service_id }}"
-                data-title="{{ $service->title }}"
-                data-price="{{ $service->price }}"
-                data-description="{{ $service->description }}"
-                data-image="{{ $service->image_url }}"
-                data-user-name="{{ $user->name }}"
-                data-user-avatar="{{ $user->avatar ?? '/default-avatar.png' }}">
-
-                <img src="{{ $service->image_url }}" alt="Service">
-                <p style="font-size:12px;margin-top:4px;">
-                    {{ $service->title }}
-                </p>
-            </a>
-            @empty
-            <p>No commissions yet.</p>
-            @endforelse
+        <div>
+            <b>{{ $user->following()->count() }}</b><br>
+            Following
         </div>
     </div>
-    @if($user->role !== 'artist' && $isOwner)
-    <div id="tab-reviews-content" class="tab-content">
-        <p>No reviews yet.</p>
-    </div>
+</div>
 
-    <div id="tab-orders-content" class="tab-content">
-        <p>No orders yet.</p>
-    </div>
+{{-- ROLE BUTTON --}}
+@if($user->role === 'artist' && $isOwner)
+<div class="px-3">
+    <a href="{{ route('artist.dashboard') }}" class="btn btn-dark w-100">Dashboard Artist</a>
+</div>
+@endif
+
+{{-- ACTION BUTTONS --}}
+<div class="action-buttons">
+
+    @if($isOwner)
+
+    <button type="button"
+        class="btn btn-outline-secondary btn-edit-profile">
+
+        Edit Profile
+
+    </button>
+
+    <button type="button"
+        class="btn btn-outline-secondary btn-share-profile">
+
+        Share Profile
+
+    </button>
+
+    @else
+
+    @php
+    $isFollowing = auth()->check()
+    ? auth()->user()->following->contains('user_id', $user->user_id)
+    : false;
+    @endphp
+
+    {{-- FOLLOW BUTTON --}}
+    <form action="{{ route('follow.toggle', $user->user_id) }}"
+        method="POST">
+
+        @csrf
+
+        <button type="submit"
+            class="btn {{ $isFollowing ? 'btn-outline-dark' : 'btn-primary' }}">
+
+            {{ $isFollowing ? 'Following' : 'Follow' }}
+
+        </button>
+
+    </form>
+
+    {{-- MESSAGE BUTTON --}}
+    <a href="{{ route('chat.index', ['user_id' => $user->user_id]) }}"
+        class="btn btn-dark d-flex align-items-center justify-content-center">
+
+        Message
+
+    </a>
+
     @endif
+
+</div>
+
+{{-- TABS --}}
+<div class="profile-tabs">
+    <a class="active" id="tab-artwork">Artwork</a>
+    @if($user->role === 'artist')
+    <a id="tab-commission">Commission</a>
+    <a id="tab-reviews">Reviews</a>
+    @else
+    @if($isOwner)
+    <a id="tab-orders">Orders</a>
+    @endif
+    @endif
+</div>
+
+{{-- TAB CONTENT --}}
+<div id="tab-artwork-content" class="grid-art tab-content" style="display:grid;">
+    @foreach($artworks as $art)
+    <a href="javascript:void(0)" class="artwork-trigger"
+        data-id="{{ $art->artwork_id }}"
+        data-caption="{{ $art->caption }}"
+        data-image="{{ $art->image_url }}"
+        data-likes="{{ $art->likes ?? 0 }}"
+        data-comments="{{ $art->comments ?? 0 }}"
+        data-shares="{{ $art->shares ?? 0 }}"
+        data-user-name="{{ $art->user->name ?? 'Unknown Artist' }}"
+        data-user-avatar="{{ $art->user->avatar ?? '/default-avatar.png' }}">
+        <img src="{{ $art->image_url }}" alt="Artwork">
+    </a>
+    @endforeach
+</div>
+
+
+<div id="tab-commission-content" class="tab-content" style="display:none;">
+    <div class="grid-art">
+        @forelse($commissionServices as $service)
+        <a href="javascript:void(0)"
+            class="service-trigger"
+            data-id="{{ $service->service_id }}"
+            data-title="{{ $service->title }}"
+            data-price="{{ $service->price }}"
+            data-description="{{ $service->description }}"
+            data-image="{{ $service->image_url }}"
+            data-user-name="{{ $user->name }}"
+            data-user-avatar="{{ $user->avatar ?? '/default-avatar.png' }}">
+
+            <img src="{{ $service->image_url }}" alt="Service">
+            <p style="font-size:12px;margin-top:4px;">
+                {{ $service->title }}
+            </p>
+        </a>
+        @empty
+        <p>No commissions yet.</p>
+        @endforelse
+    </div>
+</div>
+@if($user->role !== 'artist' && $isOwner)
+<div id="tab-reviews-content" class="tab-content">
+    <p>No reviews yet.</p>
+</div>
+
+<div id="tab-orders-content" class="tab-content">
+    <p>No orders yet.</p>
+</div>
+@endif
 
 </div>
 

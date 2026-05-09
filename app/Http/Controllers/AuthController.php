@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+
 use App\Models\User;
 use App\Services\SupabaseService;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -19,7 +19,9 @@ class AuthController extends Controller
         $this->supabase = $supabase;
     }
 
-    // Show login & register form
+    // ===============================
+    // SHOW AUTH PAGE
+    // ===============================
     public function showAuthForm()
     {
         if (Auth::check()) {
@@ -29,7 +31,9 @@ class AuthController extends Controller
         return view('auth.auth');
     }
 
-    // Register user
+    // ===============================
+    // REGISTER
+    // ===============================
     public function register(Request $request)
     {
         $request->validate([
@@ -39,45 +43,48 @@ class AuthController extends Controller
             'role' => 'required|in:artist,client'
         ]);
 
-        $redirectTo = route('auth.verify');
+        // ===============================
+        // SUPABASE AUTH REGISTER
+        // ===============================
+        $supabaseResponse = $this->supabase->signUp(
+            $request->email,
+            $request->password
+        );
 
-        $supabaseResponse = $this->supabase->signUp($request->email, $request->password, $redirectTo);
-
+        // ERROR SUPABASE
         if (isset($supabaseResponse['error'])) {
-            return back()->withErrors(['msg' => $supabaseResponse['error']['message']]);
+
+            return back()->withErrors([
+                'msg' => $supabaseResponse['error']['message']
+            ]);
+
         }
 
-        // Save user temporarily before verified
+        // ===============================
+        // SAVE USER LOCAL DATABASE
+        // ===============================
         User::create([
             'user_id' => Str::uuid(),
+
             'name' => $request->full_name,
             'email' => $request->email,
+
             'password' => Hash::make($request->password),
+
             'role' => $request->role
         ]);
 
-        return redirect()->route('auth.form')->with('success', 'Registration successful. Please check your email for verification.');
+        // ===============================
+        // REDIRECT LOGIN
+        // ===============================
+        return redirect()
+            ->route('auth.form')
+            ->with('success', 'Registration successful. Please login.');
     }
 
-    // Email verification
-    public function verify(Request $request)
-    {
-        $access_token = $request->query('access_token');
-
-        if (!$access_token) {
-            return redirect()->route('auth.form')->withErrors(['msg' => 'Verification link invalid or expired']);
-        }
-
-        $response = $this->supabase->verifyEmail($access_token);
-
-        if (isset($response['error'])) {
-            return redirect()->route('auth.form')->withErrors(['msg' => $response['error']['message']]);
-        }
-
-        return redirect()->route('auth.form')->with('success', 'Email verified. You may now login.');
-    }
-
-    // Login user
+    // ===============================
+    // LOGIN
+    // ===============================
     public function login(Request $request)
     {
         $request->validate([
@@ -87,19 +94,30 @@ class AuthController extends Controller
 
         $credentials = $request->only('email', 'password');
 
+        // ===============================
+        // LOGIN LOCAL LARAVEL
+        // ===============================
         if (Auth::attempt($credentials, $request->remember)) {
+
             $request->session()->regenerate();
-            return redirect()->intended(route('home')); // Always go back to last page or home
+
+            return redirect()->route('home');
         }
 
-        return back()->withErrors(['msg' => 'Invalid credentials']);
+        return back()->withErrors([
+            'msg' => 'Invalid credentials'
+        ]);
     }
 
-    // Logout user
+    // ===============================
+    // LOGOUT
+    // ===============================
     public function logout(Request $request)
     {
         Auth::logout();
+
         $request->session()->invalidate();
+
         $request->session()->regenerateToken();
 
         return redirect()->route('home');

@@ -38,7 +38,33 @@ class User extends Authenticatable
         });
     }
 
+    // USER YANG FOLLOW AKUN INI
+    public function followers()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'follows',
+            'following_id',
+            'follower_id',
+            'user_id',
+            'user_id'
+        );
+    }
+
     // Relationships
+    // USER YANG DIA FOLLOW
+    public function following()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'follows',
+            'follower_id',
+            'following_id',
+            'user_id',
+            'user_id'
+        );
+    }
+
     public function artworks()
     {
         return $this->hasMany(Artwork::class, 'user_id', 'user_id');
@@ -84,15 +110,7 @@ class User extends Authenticatable
         return $this->hasMany(Chat::class, 'sender_id');
     }
 
-    public function followers()
-    {
-        return $this->hasMany(Follow::class, 'following_id');
-    }
 
-    public function following()
-    {
-        return $this->hasMany(Follow::class, 'follower_id');
-    }
 
     public function commissionServices()
     {

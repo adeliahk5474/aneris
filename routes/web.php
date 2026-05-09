@@ -17,6 +17,7 @@ use App\Http\Controllers\EditController;
 use App\Http\Controllers\CommissionServiceController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\FollowController;
 
 // ===============================
 // HOME / HOMEPAGE
@@ -36,7 +37,6 @@ Route::get('/artwork/{id}', [ArtworkController::class, 'show'])->name('artwork.d
 // ===============================
 Route::get('/auth', [AuthController::class, 'showAuthForm'])->name('auth.form');
 Route::post('/auth/register', [AuthController::class, 'register'])->name('auth.register');
-Route::get('/auth/verify', [AuthController::class, 'verify'])->name('auth.verify');
 Route::post('/auth/login', [AuthController::class, 'login'])->name('auth.login');
 Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 Route::get('/auth/login', [AuthController::class, 'showAuthForm'])->name('login');
@@ -53,6 +53,10 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/dashboard', [ArtistDashboardController::class, 'index'])
     ->name('artist.dashboard')
     ->middleware('auth');
+
+Route::post('/follow/{id}', [FollowController::class, 'toggle'])
+    ->middleware('auth')
+    ->name('follow.toggle');
 
 // ===============================
 // COMMISSION
@@ -86,24 +90,20 @@ Route::get('/cart', [OrderController::class, 'cart'])
     ->name('cart.index');
 Route::post('/order/accept', [OrderController::class, 'accept'])->name('order.accept');
 Route::post('/order/reject', [OrderController::class, 'reject'])->name('order.reject');
+Route::post('/order/revision', [OrderController::class, 'revision'])
+    ->name('order.revision');
 Route::post('/order/complete', [OrderController::class, 'complete'])->name('order.complete');
 
+Route::middleware('auth')->group(function () {
 
-// ===============================
-// UI Pages (frontend-only views)
-// ===============================
+    Route::get('/chat', [ChatController::class, 'list'])->name('chat.list');
 
-// 🔥 chat list (inbox)
-Route::get('/chat', [ChatController::class, 'list'])->name('chat.list');
+    Route::get('/chat/thread', [ChatController::class, 'index'])->name('chat.index');
 
-// 🔥 chat thread (DM / ORDER)
-Route::get('/chat/thread', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
 
-// 🔥 kirim chat
-Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
-
-// 🔥 auto refresh (optional)
-Route::get('/chat/fetch', [ChatController::class, 'fetch'])->name('chat.fetch');
+    Route::get('/chat/fetch', [ChatController::class, 'fetch'])->name('chat.fetch');
+});
 
 Route::get('/notifications', function () {
     return view('pages.notifications');

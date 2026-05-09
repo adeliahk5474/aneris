@@ -4,8 +4,8 @@
 
 <style>
     /* ===============================
-   SEARCH BAR
-=============================== */
+       SEARCH BAR
+    =============================== */
     .explore-search {
         padding: 10px;
         position: sticky;
@@ -35,19 +35,56 @@
     }
 
     /* ===============================
-   GRID CONTENT
-=============================== */
+       USER SEARCH
+    =============================== */
+    .user-scroll {
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        padding: 10px 4px 14px;
+        margin-bottom: 10px;
+    }
+
+    .user-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .user-card {
+        min-width: 80px;
+        text-align: center;
+        text-decoration: none;
+        color: #000;
+    }
+
+    .user-card img {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #ddd;
+        margin-bottom: 6px;
+    }
+
+    .user-card small {
+        display: block;
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* ===============================
+       GRID CONTENT
+    =============================== */
     .explore-grid {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
-        /* 5 kolom */
         gap: 4px;
         padding: 6px;
     }
 
     .explore-item {
         position: relative;
-        /* penting buat label */
         width: 100%;
         aspect-ratio: 1/1;
         overflow: hidden;
@@ -62,7 +99,9 @@
         object-fit: cover;
     }
 
-    /* RESPONSIVE GRID */
+    /* ===============================
+       RESPONSIVE GRID
+    =============================== */
     @media (max-width: 1200px) {
         .explore-grid {
             grid-template-columns: repeat(4, 1fr);
@@ -81,12 +120,13 @@
         }
     }
 
-    /* FORCE POPUP HIDDEN */
+    /* ===============================
+       POPUP
+    =============================== */
     #servicePopup {
         display: none;
     }
 
-    /* ================= POPUP FIX ================= */
     .artwork-popup {
         display: none;
         position: fixed;
@@ -120,30 +160,101 @@
 
     {{-- SEARCH BAR --}}
     <div class="p-3 bg-white sticky-top" style="z-index:1020;">
+
         <form action="{{ route('explore') }}" method="GET" class="search-box w-100">
+
             <div class="input-group input-group-lg">
+
                 <span class="input-group-text bg-white border-end-0">
                     <i class="bi bi-search fs-4"></i>
                 </span>
-                <input type="text" name="q" value="{{ request('q') }}"
+
+                <input type="text"
+                    name="search"
+                    value="{{ request('search') }}"
                     class="form-control border-start-0"
-                    placeholder="Search artworks, artists..."
+                    placeholder="Search users, artworks, commissions..."
                     autocomplete="off"
                     style="font-size:18px; padding:12px;">
+
             </div>
+
         </form>
+
     </div>
+
+    {{-- USERS RESULT --}}
+    @if(isset($users) && $users->count())
+
+    <div class="px-2">
+
+        <div class="fw-bold mb-2">
+            Users
+        </div>
+
+        <div class="user-scroll">
+
+            @foreach($users as $user)
+
+            <a href="{{ route('profile.show', $user->user_id) }}"
+                class="user-card">
+
+                <img src="{{ $user->avatar ?? '/default-avatar.png' }}"
+                    alt="avatar">
+
+                <small>
+                    {{ $user->username ?? $user->name }}
+                </small>
+
+            </a>
+
+            @endforeach
+
+        </div>
+
+    </div>
+
+    @endif
 
     {{-- GRID CONTENT --}}
     <div class="explore-grid">
+
         @foreach($explore as $item)
+
         <div class="explore-item">
 
+            {{-- ===============================
+                 ARTWORK
+            =============================== --}}
             @if($item->type === 'artwork')
-            <a href="{{ $item->preview_url ?? $item->file_url }}" target="_blank">
-                <img src="{{ $item->preview_url ?? $item->file_url }}" alt="art">
+
+            <a href="{{ $item->preview_url ?? $item->file_url }}"
+                target="_blank">
+
+                <img src="{{ $item->preview_url ?? $item->file_url }}"
+                    alt="art">
+
             </a>
+
+            {{-- label --}}
+            <div style="
+                position:absolute;
+                bottom:4px;
+                left:4px;
+                background:rgba(0,0,0,0.6);
+                color:#fff;
+                font-size:10px;
+                padding:2px 5px;
+                border-radius:4px;
+            ">
+                ARTWORK
+            </div>
+
+            {{-- ===============================
+                 COMMISSION
+            =============================== --}}
             @else
+
             <a href="javascript:void(0)"
                 class="service-trigger"
                 data-id="{{ $item->service_id }}"
@@ -152,38 +263,44 @@
                 data-description="{{ $item->description }}"
                 data-image="{{ $item->image_url }}"
                 data-user-name="{{ $item->artist->name ?? 'Unknown' }}"
-                data-user-avatar="{{ $item->artist->avatar ?? '/default-avatar.png' }}"
+                data-user-avatar="{{ $item->artist->avatar ?? '/default-avatar.png' }}">
 
-                <img src="{{ $item->image_url }}" alt="service">
+                <img src="{{ $item->image_url }}"
+                    alt="service">
 
-                {{-- label kecil --}}
+                {{-- label --}}
                 <div style="
                     position:absolute;
+                    top:4px;
+                    left:4px;
                     background:rgba(0,0,0,0.6);
                     color:#fff;
                     font-size:10px;
                     padding:2px 5px;
                     border-radius:4px;
-                    margin:4px;
                 ">
                     COMMISSION
                 </div>
+
             </a>
+
             @endif
 
         </div>
+
         @endforeach
+
     </div>
 
 </div>
 
 @include('layouts.botnav')
+
 @include('commission.show')
 @include('commission.order')
 @include('commission.payment')
 
 <script src="{{ asset('js/explore-popup.js') }}"></script>
 <script src="{{ asset('js/order-popup.js') }}"></script>
-
 
 @endsection

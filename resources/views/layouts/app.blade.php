@@ -24,6 +24,10 @@
             font-size: 22px;
             font-weight: 700;
         }
+
+        :root {
+            --bottom-nav-height: 65px;
+        }
     </style>
 </head>
 

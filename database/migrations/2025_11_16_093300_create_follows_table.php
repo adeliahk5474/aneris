@@ -8,23 +8,33 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('orders')) {
         Schema::create('follows', function (Blueprint $table) {
-            $table->id();
 
-            $table->unsignedBigInteger('follower_id');  // user yang mengikuti
-            $table->unsignedBigInteger('following_id'); // user yang diikuti
+            $table->uuid('follow_id')->primary();
 
-            $table->timestamps();
+            // USER YANG FOLLOW
+            $table->uuid('follower_id');
 
-            // relasi ke users
-            $table->foreign('follower_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('following_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('follower_id')
+                ->references('user_id')
+                ->on('users')
+                ->cascadeOnDelete();
 
-            // cegah duplicate follow
+            // USER YANG DIFOLLOW
+            $table->uuid('following_id');
+
+            $table->foreign('following_id')
+                ->references('user_id')
+                ->on('users')
+                ->cascadeOnDelete();
+
+            // anti duplicate
             $table->unique(['follower_id', 'following_id']);
+
+            $table->timestampsTz();
+
         });
-    }}
+    }
 
     public function down(): void
     {
