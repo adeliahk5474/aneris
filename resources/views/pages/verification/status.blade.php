@@ -46,17 +46,14 @@
                 <span class="meta-label">Link sosmed</span>
                 <span class="meta-value">{{ count($latest->social_media_links ?? []) }} link</span>
             </div>
-            @if($latest->ai_score_reference !== null)
-            <div class="status-meta-row">
-                <span class="meta-label">Skor AI awal</span>
-                <span class="meta-value">{{ $latest->ai_score_reference }}/100</span>
-            </div>
-            @endif
         </div>
         <div class="status-tip">
             <i class="bi bi-bell"></i>
             Kamu akan mendapat notifikasi setelah review selesai.
         </div>
+        <a href="{{ route('artist.dashboard') }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+        </a>
 
         @elseif($latest && $latest->status === 'in_review')
         {{-- ══ IN REVIEW ══ --}}
@@ -78,6 +75,9 @@
                 <span class="meta-value">{{ $latest->updated_at->format('d M Y, H:i') }}</span>
             </div>
         </div>
+        <a href="{{ route('artist.dashboard') }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+        </a>
 
         @elseif($latest && $latest->status === 'rejected')
         {{-- ══ REJECTED ══ --}}
@@ -139,8 +139,12 @@
             </ul>
         </div>
 
+        <a href="{{ route('artist.dashboard') }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+        </a>
+
         @else
-        {{-- Tidak ada submission sama sekali --}}
+        {{-- ══ BELUM ADA SUBMISI ══ --}}
         <div class="status-icon empty">
             <i class="bi bi-folder-x"></i>
         </div>
@@ -151,6 +155,9 @@
         </div>
         <a href="{{ route('verification.create') }}" class="btn-primary">
             <i class="bi bi-send"></i> Ajukan Verifikasi
+        </a>
+        <a href="{{ route('artist.dashboard') }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
         </a>
         @endif
 

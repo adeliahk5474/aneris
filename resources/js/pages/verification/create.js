@@ -22,8 +22,12 @@ const declareChk  = document.getElementById('declarationCheck');
 // ── BROWSE ──
 btnBrowse?.addEventListener('click', () => fileInput?.click());
 dropZone?.addEventListener('click', (e) => {
-    if (e.target === dropZone || e.target.classList.contains('file-drop-text') ||
-        e.target.classList.contains('file-drop-sub') || e.target.classList.contains('file-drop-formats')) {
+    if (
+        e.target === dropZone ||
+        e.target.classList.contains('file-drop-text') ||
+        e.target.classList.contains('file-drop-sub') ||
+        e.target.classList.contains('file-drop-formats')
+    ) {
         fileInput?.click();
     }
 });
@@ -43,7 +47,7 @@ dropZone?.addEventListener('drop', (e) => {
 // ── FILE INPUT CHANGE ──
 fileInput?.addEventListener('change', () => {
     addFiles([...fileInput.files]);
-    fileInput.value = ''; // reset supaya bisa pilih file yang sama lagi
+    fileInput.value = '';
 });
 
 // ── ADD FILES ──
@@ -58,29 +62,26 @@ function addFiles(newFiles) {
             alert(`File "${file.name}" melebihi 20MB dan dilewati.`);
             continue;
         }
-        // Cek duplikat nama+ukuran
         const isDup = selectedFiles.some(f => f.name === file.name && f.size === file.size);
         if (!isDup) selectedFiles.push(file);
     }
     renderFileList();
-    syncFileInput();
     updateSubmitState();
 }
 
-// ── RENDER LIST ──
+// ── RENDER FILE LIST ──
 function renderFileList() {
     if (!fileList) return;
     fileList.innerHTML = '';
 
     selectedFiles.forEach((file, idx) => {
-        const kb  = file.size < 1024 * 1024
+        const kb = file.size < 1024 * 1024
             ? Math.round(file.size / 1024) + 'KB'
             : (file.size / 1024 / 1024).toFixed(1) + 'MB';
 
         const item = document.createElement('div');
         item.className = 'file-item';
 
-        // Preview thumb
         const thumb = document.createElement('img');
         thumb.className = 'file-item-thumb';
         thumb.alt = file.name;
@@ -102,7 +103,6 @@ function renderFileList() {
         item.querySelector('.file-item-remove').addEventListener('click', () => {
             selectedFiles.splice(idx, 1);
             renderFileList();
-            syncFileInput();
             updateSubmitState();
         });
 
@@ -125,16 +125,6 @@ function renderFileList() {
     }
 }
 
-// ── SYNC FILE INPUT ──
-// Karena tidak bisa set FileList secara langsung di native input,
-// kita pakai DataTransfer untuk rebuild
-function syncFileInput() {
-    if (!fileInput) return;
-    const dt = new DataTransfer();
-    selectedFiles.forEach(f => dt.items.add(f));
-    fileInput.files = dt.files;
-}
-
 // ── SUBMIT STATE ──
 function updateSubmitState() {
     if (!btnSubmit) return;
@@ -155,28 +145,27 @@ function detectPlatform(input, idx) {
     if (!icon) return;
 
     const map = [
-        { match: 'instagram',  cls: 'bi-instagram',  extra: 'instagram' },
-        { match: 'tiktok',     cls: 'bi-tiktok',     extra: 'tiktok'    },
-        { match: 'twitter',    cls: 'bi-twitter-x',  extra: 'twitter'   },
-        { match: 'x.com',      cls: 'bi-twitter-x',  extra: 'twitter'   },
-        { match: 'youtube',    cls: 'bi-youtube',    extra: 'youtube'   },
-        { match: 'pixiv',      cls: 'bi-image',      extra: 'pixiv'     },
-        { match: 'deviantart', cls: 'bi-palette',    extra: ''          },
-        { match: 'artstation', cls: 'bi-brush',      extra: ''          },
-        { match: 'behance',    cls: 'bi-behance',    extra: ''          },
-        { match: 'facebook',   cls: 'bi-facebook',   extra: ''          },
+        { match: 'instagram',  cls: 'bi-instagram' },
+        { match: 'tiktok',     cls: 'bi-tiktok'    },
+        { match: 'twitter',    cls: 'bi-twitter-x' },
+        { match: 'x.com',      cls: 'bi-twitter-x' },
+        { match: 'youtube',    cls: 'bi-youtube'   },
+        { match: 'pixiv',      cls: 'bi-image'     },
+        { match: 'deviantart', cls: 'bi-palette'   },
+        { match: 'artstation', cls: 'bi-brush'     },
+        { match: 'behance',    cls: 'bi-behance'   },
+        { match: 'facebook',   cls: 'bi-facebook'  },
     ];
 
     const found = map.find(m => val.includes(m.match));
     icon.innerHTML = `<i class="bi ${found ? found.cls : 'bi-link-45deg'}"></i>`;
-    icon.className = 'social-link-platform' + (found?.extra ? ' ' + found.extra : '');
 }
 
 btnAddLink?.addEventListener('click', () => {
     if (linkCount >= MAX_LINKS) return;
     const idx = linkCount++;
     const row = document.createElement('div');
-    row.className    = 'social-link-row';
+    row.className     = 'social-link-row';
     row.dataset.index = idx;
     row.innerHTML = `
         <div class="social-link-platform" id="platform_${idx}">
@@ -200,12 +189,94 @@ function removeLink(btn) {
     if (btnAddLink) btnAddLink.style.display = '';
 }
 
-// ── SUBMIT LOADER ──
-verifForm?.addEventListener('submit', () => {
-    if (submitText)  submitText.style.display  = 'none';
-    if (submitLoad)  submitLoad.style.display  = '';
-    if (btnSubmit)   btnSubmit.disabled = true;
+// ── SUBMIT VIA FETCH ──
+// Lebih reliable untuk multi-file dibanding form submit biasa
+verifForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    // Validasi client-side
+    if (selectedFiles.length < 3) {
+        alert('Upload minimal 3 file gambar portofolio.');
+        return;
+    }
+    if (!declareChk?.checked) {
+        alert('Centang pernyataan keaslian terlebih dahulu.');
+        return;
+    }
+
+    // Build FormData dari form (ambil CSRF, sosmed links, declaration)
+    const formData = new FormData(verifForm);
+
+    // Hapus portfolio_files dari FormData form (yang dari native input, mungkin kosong)
+    // lalu tambahkan dari selectedFiles array
+    formData.delete('portfolio_files[]');
+    selectedFiles.forEach(file => {
+        formData.append('portfolio_files[]', file);
+    });
+
+    // Loading state
+    if (submitText) submitText.style.display = 'none';
+    if (submitLoad) submitLoad.style.display = '';
+    if (btnSubmit)  btnSubmit.disabled = true;
+
+    fetch(verifForm.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+    .then(async (response) => {
+        const contentType = response.headers.get('content-type') ?? '';
+
+        // Response JSON = dari AJAX handler kita
+        if (contentType.includes('application/json')) {
+            const json = await response.json();
+            if (json.success) {
+                window.location.href = json.redirect;
+            } else {
+                showError(json.message ?? 'Terjadi kesalahan.');
+                resetButton();
+            }
+            return;
+        }
+
+        // Response HTML = validasi error dari Laravel (redirect back with errors)
+        if (response.redirected) {
+            window.location.href = response.url;
+            return;
+        }
+
+        // Render HTML error page
+        const html = await response.text();
+        document.open();
+        document.write(html);
+        document.close();
+    })
+    .catch(err => {
+        console.error('Submit error:', err);
+        showError('Terjadi kesalahan jaringan. Coba lagi.');
+        resetButton();
+    });
 });
+
+function resetButton() {
+    if (submitText) submitText.style.display = '';
+    if (submitLoad) submitLoad.style.display = 'none';
+    if (btnSubmit)  btnSubmit.disabled = false;
+}
+
+function showError(msg) {
+    // Cari atau buat error box
+    let box = document.querySelector('.verif-alert.error');
+    if (!box) {
+        box = document.createElement('div');
+        box.className = 'verif-alert error';
+        verifForm?.before(box);
+    }
+    box.innerHTML = `<i class="bi bi-exclamation-circle"></i> ${msg}`;
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
 // ── DECLARE TOGGLE ──
 function toggleDeclare(el) {

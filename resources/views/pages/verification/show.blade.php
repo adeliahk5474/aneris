@@ -67,7 +67,17 @@
                     $name = is_array($filePath) ? ($filePath['name'] ?? basename($path)) : basename($path);
                     $size = is_array($filePath) ? ($filePath['size'] ?? null) : null;
                     $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-                    $url = \Storage::url($path);
+
+                    // ✅ FIX: Jika path sudah berupa Cloudinary URL, langsung pakai. Jika tidak, pakai Storage::url()
+                    $url = str_starts_with($path, 'http') ? $path : \Storage::url($path);
+
+                    // ✅ FIX DOWNLOAD: Cloudinary — tambahkan fl_attachment agar browser force-download
+                    if (str_contains($url, 'res.cloudinary.com')) {
+                    $downloadUrl = str_replace('/upload/', '/upload/fl_attachment/', $url);
+                    } else {
+                    $downloadUrl = $url;
+                    }
+
                     $base = strtolower(pathinfo($name, PATHINFO_FILENAME));
                     $wipKws = ['wip','sketch','draft','process','progress','layer','lineart','rough','thumbnail'];
                     $isWip = collect($wipKws)->contains(fn($kw) => str_contains($base, $kw));
@@ -94,8 +104,18 @@
                     @php
                     $path = is_array($filePath) ? $filePath['path'] : $filePath;
                     $name = is_array($filePath) ? ($filePath['name'] ?? basename($path)) : basename($path);
+
+                    // ✅ FIX: Resolusi URL Cloudinary vs local
+                    $url = str_starts_with($path, 'http') ? $path : \Storage::url($path);
+
+                    // ✅ FIX DOWNLOAD: Cloudinary fl_attachment untuk force download
+                    if (str_contains($url, 'res.cloudinary.com')) {
+                    $downloadUrl = str_replace('/upload/', '/upload/fl_attachment/', $url);
+                    } else {
+                    $downloadUrl = $url;
+                    }
                     @endphp
-                    <a href="{{ \Storage::url($path) }}" download="{{ $name }}" class="btn-download">
+                    <a href="{{ $downloadUrl }}" target="_blank" rel="noopener" class="btn-download">
                         <i class="bi bi-download"></i> {{ $name }}
                     </a>
                     @endforeach

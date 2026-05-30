@@ -22,15 +22,10 @@
         <div class="profile-avatar-wrap">
             <img src="{{ $user->avatar ?? asset('images/default-avatar.png') }}"
                 class="profile-avatar" alt="{{ $user->name }}">
-            @if($isArtist)
-            <div class="profile-verified" title="Verified Artist">
-                <i class="bi bi-check"></i>
-            </div>
             @if($user->isVerifiedArtist())
             <span class="verified-badge">
                 <i class="bi bi-patch-check-fill"></i> Verified Non-AI
             </span>
-            @endif
             @endif
         </div>
 

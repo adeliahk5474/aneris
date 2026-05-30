@@ -17,10 +17,12 @@ use App\Http\Controllers\FollowController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\LikeController;
-use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\VerificationController;
+use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminVerificationController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminHomeSettingController;
 
 /* ===============================
    HOME
@@ -47,13 +49,15 @@ Route::post('/auth/logout',   [AuthController::class, 'logout'])->name('auth.log
 =============================== */
 Route::prefix('admin')->name('admin.')->group(function () {
 
-    // Guest
+    // Guest admin
     Route::get('/login',   [AdminAuthController::class, 'showLogin'])->name('login');
     Route::post('/login',  [AdminAuthController::class, 'login']);
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
     // Protected
     Route::middleware('auth.admin')->group(function () {
+
+        // Dashboard
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Verifikasi
@@ -63,18 +67,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::patch('/{verification}/take',   [AdminVerificationController::class, 'take'])->name('take');
             Route::patch('/{verification}/decide', [AdminVerificationController::class, 'decide'])->name('decide');
         });
+
+        // Users
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('/artists', [AdminUserController::class, 'artists'])->name('artists');
+            Route::get('/clients', [AdminUserController::class, 'clients'])->name('clients');
+        });
+        Route::get('/home-setting',   [AdminHomeSettingController::class, 'edit'])->name('home-setting.edit');
+        Route::patch('/home-setting', [AdminHomeSettingController::class, 'update'])->name('home-setting.update');
     });
 });
+
 /* ===============================
    VERIFIKASI PORTFOLIO ARTIST
-   Nama route yang dihasilkan:
-     verification.store   → POST /verification/store
-     verification.create  → GET  /verification/create
-     verification.status  → GET  /verification/status
 =============================== */
 Route::middleware('auth')->prefix('verification')->name('verification.')->group(function () {
-    Route::post('/store',  [VerificationController::class, 'store'])->name('store');
     Route::get('/create',  [VerificationController::class, 'create'])->name('create');
+    Route::post('/store',  [VerificationController::class, 'store'])->name('store');
     Route::get('/status',  [VerificationController::class, 'status'])->name('status');
 });
 
@@ -141,16 +150,16 @@ Route::middleware('auth')->group(function () {
    PAYMENT — Midtrans
 =============================== */
 Route::middleware('auth')->group(function () {
-    Route::post('/payment/checkout',       [PaymentController::class, 'checkout'])->name('payment.checkout');
-    Route::post('/payment/verify',         [PaymentController::class, 'verify'])->name('payment.verify');
-    Route::get('/payment/success',         [PaymentController::class, 'success'])->name('payment.success');
-    Route::get('/payment/unfinish',        [PaymentController::class, 'unfinish'])->name('payment.unfinish');
-    Route::get('/payment/error',           [PaymentController::class, 'error'])->name('payment.error');
-    Route::get('/payment/finish',          [PaymentController::class, 'finish'])->name('payment.finish');
-    Route::post('/payment/verify-status',  [PaymentController::class, 'verifyStatus'])->name('payment.verifyStatus');
+    Route::post('/payment/checkout',      [PaymentController::class, 'checkout'])->name('payment.checkout');
+    Route::post('/payment/verify',        [PaymentController::class, 'verify'])->name('payment.verify');
+    Route::get('/payment/success',        [PaymentController::class, 'success'])->name('payment.success');
+    Route::get('/payment/unfinish',       [PaymentController::class, 'unfinish'])->name('payment.unfinish');
+    Route::get('/payment/error',          [PaymentController::class, 'error'])->name('payment.error');
+    Route::get('/payment/finish',         [PaymentController::class, 'finish'])->name('payment.finish');
+    Route::post('/payment/verify-status', [PaymentController::class, 'verifyStatus'])->name('payment.verifyStatus');
 });
 
-// Webhook — tanpa auth & CSRF (exclude di bootstrap/app.php)
+// Webhook Midtrans — tanpa auth & CSRF
 Route::post('/payment/notification', [PaymentController::class, 'notification'])
     ->name('payment.notification');
 
@@ -158,12 +167,12 @@ Route::post('/payment/notification', [PaymentController::class, 'notification'])
    CHAT
 =============================== */
 Route::middleware('auth')->group(function () {
-    Route::get('/chat',                    [ChatController::class, 'list'])->name('chat.list');
-    Route::get('/chat/thread',             [ChatController::class, 'index'])->name('chat.index');
-    Route::post('/chat/send',              [ChatController::class, 'send'])->name('chat.send');
-    Route::get('/chat/fetch',              [ChatController::class, 'fetch'])->name('chat.fetch');
-    Route::get('/chat/active-channels',    [ChatController::class, 'activeChannels']);
-    Route::get('/chat/unread-count',       [ChatController::class, 'unreadCount']);
+    Route::get('/chat',                 [ChatController::class, 'list'])->name('chat.list');
+    Route::get('/chat/thread',          [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat/send',           [ChatController::class, 'send'])->name('chat.send');
+    Route::get('/chat/fetch',           [ChatController::class, 'fetch'])->name('chat.fetch');
+    Route::get('/chat/active-channels', [ChatController::class, 'activeChannels']);
+    Route::get('/chat/unread-count',    [ChatController::class, 'unreadCount']);
 });
 
 /* ===============================
@@ -184,10 +193,10 @@ Route::middleware('auth')->group(function () {
    NOTIFICATIONS
 =============================== */
 Route::middleware('auth')->group(function () {
-    Route::get('/notifications',                  [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/read-all',        [NotificationController::class, 'markAllRead'])->name('notifications.readAll');
-    Route::post('/notifications/{notifId}/read',  [NotificationController::class, 'markRead'])->name('notifications.read');
-    Route::get('/notifications/count',            [NotificationController::class, 'unreadCount'])->name('notifications.count');
+    Route::get('/notifications',                 [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all',       [NotificationController::class, 'markAllRead'])->name('notifications.readAll');
+    Route::post('/notifications/{notifId}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::get('/notifications/count',           [NotificationController::class, 'unreadCount'])->name('notifications.count');
 });
 
 /* ===============================

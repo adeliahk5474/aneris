@@ -36,7 +36,7 @@ class AdminVerificationController extends Controller
             ->pluck('cnt', 'status')
             ->toArray();
 
-        return view('admin.verifications.index', compact(
+        return view('pages.verification.index', compact(
             'verifications',
             'total',
             'counts',
@@ -49,7 +49,7 @@ class AdminVerificationController extends Controller
     public function show(PortfolioVerification $verification)
     {
         $verification->load('artist');
-        return view('admin.verifications.show', compact('verification'));
+        return view('pages.verification.show', compact('verification'));
     }
 
     // ── TANDAI IN REVIEW ──
@@ -116,7 +116,7 @@ class AdminVerificationController extends Controller
             : 'Submission direject. Artist dikunci 30 hari.';
 
         return redirect()
-            ->route('admin.verification.show', $verification->id)
+            ->route('pages.verification.show', $verification->id)
             ->with('success', $msg);
     }
 }

@@ -5,9 +5,16 @@
 
 @vite('resources/css/homepage/home.css')
 
+@php
+$hs = \App\Models\HomeSetting::getAllKeyed();
+@endphp
+
 {{-- ── HERO ── --}}
 <div class="home-hero">
-    <h1>For the love of human creativity</h1>
+    <h1>{{ $hs['hero_title'] ?? 'For the love of human creativity' }}</h1>
+    @if(!empty($hs['hero_subtitle']))
+    <p class="hero-subtitle">{{ $hs['hero_subtitle'] }}</p>
+    @endif
     <form action="{{ route('explore') }}" method="GET">
         <div class="hero-search-wrap">
             <span class="hero-search-icon"><i class="bi bi-search"></i></span>
@@ -20,16 +27,18 @@
 {{-- ── BANNER ── --}}
 <div class="banner-section">
     <div class="banner-grid">
-        <a href="{{ route('explore', ['category' => 'Illustrations']) }}" class="banner-card">
+        <a href="{{ route('explore', ['category' => 'Illustrations']) }}" class="banner-card"
+            style="background: {{ $hs['banner1_color'] ?? '#1a1a2e' }};">
             <div class="banner-text">
-                <div class="banner-title">Made for creators</div>
-                <div class="banner-sub">Illustrations, avatars, emotes, live2d — made by humans who love what they do.</div>
+                <div class="banner-title">{{ $hs['banner1_title'] ?? 'Made for creators' }}</div>
+                <div class="banner-sub">{{ $hs['banner1_subtitle'] ?? 'Illustrations, avatars, emotes, live2d — made by humans who love what they do.' }}</div>
             </div>
         </a>
-        <a href="{{ route('explore') }}" class="banner-card" style="background:#0a1a10;">
+        <a href="{{ route('explore') }}" class="banner-card"
+            style="background: {{ $hs['banner2_color'] ?? '#0a1a10' }};">
             <div class="banner-text">
-                <div class="banner-title">No Generative AI</div>
-                <div class="banner-sub">Until generative AI is made with Consent, Credit, and Compensation, it is not welcome here.</div>
+                <div class="banner-title">{{ $hs['banner2_title'] ?? 'No Generative AI' }}</div>
+                <div class="banner-sub">{{ $hs['banner2_subtitle'] ?? 'Until generative AI is made with Consent, Credit, and Compensation, it is not welcome here.' }}</div>
             </div>
         </a>
     </div>
@@ -54,12 +63,12 @@
         <a href="{{ route('explore', ['category' => $cat->name]) }}" class="cat-pill">
             <span>
                 @switch(strtolower($cat->name))
-                    @case('illustrations') 🎨 @break
-                    @case('2d avatars') 🧑 @break
-                    @case('3d models') 🗿 @break
-                    @case('emotes') 😀 @break
-                    @case('live2d') 🎭 @break
-                    @default 🖼️
+                @case('illustrations') 🎨 @break
+                @case('2d avatars') 🧑 @break
+                @case('3d models') 🗿 @break
+                @case('emotes') 😀 @break
+                @case('live2d') 🎭 @break
+                @default 🖼️
                 @endswitch
             </span>
             {{ $cat->name }}
@@ -79,18 +88,18 @@
                     <div class="service-rank">
                         {{ $i === 0 ? '🥇' : ($i === 1 ? '🥈' : '🥉') }}
                     </div>
-                @else
+                    @else
                     @if($service->status === 'active')
-                        <span class="service-badge">OPEN</span>
+                    <span class="service-badge">OPEN</span>
                     @endif
-                @endif
+                    @endif
 
-                @if($service->like_count > 0)
+                    @if($service->like_count > 0)
                     <div class="service-like-badge">
                         <i class="bi bi-heart-fill" style="font-size:9px;"></i>
                         {{ $service->like_count }}
                     </div>
-                @endif
+                    @endif
             </div>
             <div class="service-info">
                 <div class="service-name">{{ $service->title }}</div>
@@ -104,11 +113,11 @@
                 <div class="service-meta">
                     <div class="service-rating">
                         @if($service->review_count > 0)
-                            <i class="bi bi-star-fill"></i>
-                            <span>{{ number_format($service->avg_rating, 1) }}</span>
-                            <span style="opacity:.6;">({{ $service->review_count }})</span>
+                        <i class="bi bi-star-fill"></i>
+                        <span>{{ number_format($service->avg_rating, 1) }}</span>
+                        <span style="opacity:.6;">({{ $service->review_count }})</span>
                         @else
-                            <span class="no-review"><i class="bi bi-star" style="font-size:11px;"></i> Baru</span>
+                        <span class="no-review"><i class="bi bi-star" style="font-size:11px;"></i> Baru</span>
                         @endif
                     </div>
                     <div class="service-price">Rp {{ number_format($service->base_price ?? 0, 0, ',', '.') }}</div>
@@ -167,11 +176,11 @@
                 <div class="service-meta">
                     <div class="service-rating">
                         @if($service->review_count > 0)
-                            <i class="bi bi-star-fill"></i>
-                            <span>{{ number_format($service->avg_rating, 1) }}</span>
-                            <span style="opacity:.6;">({{ $service->review_count }})</span>
+                        <i class="bi bi-star-fill"></i>
+                        <span>{{ number_format($service->avg_rating, 1) }}</span>
+                        <span style="opacity:.6;">({{ $service->review_count }})</span>
                         @else
-                            <span class="no-review"><i class="bi bi-heart" style="font-size:11px;"></i> Disukai</span>
+                        <span class="no-review"><i class="bi bi-heart" style="font-size:11px;"></i> Disukai</span>
                         @endif
                     </div>
                     <div class="service-price">Rp {{ number_format($service->base_price ?? 0, 0, ',', '.') }}</div>

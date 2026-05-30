@@ -59,11 +59,19 @@
             </a>
 
             <div class="sidebar-section-label">Users</div>
-            <a href="#" class="sidebar-item">
+            <a href="{{ route('admin.users.artists') }}"
+                class="sidebar-item {{ request()->routeIs('admin.users.artists') ? 'active' : '' }}">
                 <i class="bi bi-people"></i> Artists
             </a>
-            <a href="#" class="sidebar-item">
+            <a href="{{ route('admin.users.clients') }}"
+                class="sidebar-item {{ request()->routeIs('admin.users.clients') ? 'active' : '' }}">
                 <i class="bi bi-person"></i> Clients
+            </a>
+
+            <div class="sidebar-section-label">Konten</div>
+            <a href="{{ route('admin.home-setting.edit') }}"
+                class="sidebar-item {{ request()->routeIs('admin.home-setting.*') ? 'active' : '' }}">
+                <i class="bi bi-house-gear"></i> Tampilan Home
             </a>
         </aside>
 

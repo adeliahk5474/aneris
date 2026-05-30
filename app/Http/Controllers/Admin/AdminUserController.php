@@ -16,12 +16,12 @@ class AdminUserController extends Controller
             ->withCount(['artworks', 'commissionServices'])
             ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             }))
             ->latest()
             ->paginate(20);
 
-        return view('pages.admin.users.artists', compact('artists', 'search'));
+        return view('admin.users.artists', compact('artists', 'search'));
     }
 
     public function clients(Request $request)
@@ -29,14 +29,14 @@ class AdminUserController extends Controller
         $search = $request->input('search');
 
         $clients = User::where('role', 'client')
-            ->withCount('orders')
+            ->withCount('ordersAsClient')
             ->when($search, fn($q) => $q->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             }))
             ->latest()
             ->paginate(20);
 
-        return view('pages.admin.users.clients', compact('clients', 'search'));
+        return view('admin.users.clients', compact('clients', 'search'));
     }
 }

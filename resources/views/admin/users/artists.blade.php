@@ -4,7 +4,7 @@
 
 @section('content')
 
-@vite('resources/css/pages/admin/users.css')
+@vite('resources/css/admin/users.css')
 
 <div class="page-header">
     <div>

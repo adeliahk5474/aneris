@@ -4,7 +4,7 @@
 
 @section('content')
 
-@vite('resources/css/pages/admin/users.css')
+@vite('resources/css/admin/users.css')
 
 <div class="page-header">
     <div>
@@ -53,7 +53,7 @@
                     </div>
                 </td>
                 <td style="color:var(--text); font-size:13px;">
-                    {{ $user->orders_count }} order
+                    {{ $user->orders_as_client_count }} order
                 </td>
                 <td style="color:var(--muted); font-size:12px; white-space:nowrap;">
                     {{ $user->created_at->format('d M Y') }}

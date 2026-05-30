@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Models\PortfolioVerification;
 use App\Services\PortfolioAnalyzer;
+use App\Services\CloudinaryService;
 
 class VerificationController extends Controller
 {
@@ -17,17 +18,14 @@ class VerificationController extends Controller
             ->latest()
             ->first();
 
-        // Sudah approved — redirect ke status
         if ($user->is_verified) {
             return redirect()->route('verification.status');
         }
 
-        // Ada submission aktif
         if ($latest && in_array($latest->status, ['pending', 'in_review'])) {
             return redirect()->route('verification.status');
         }
 
-        // Cooldown
         if (
             $latest && $latest->status === 'rejected'
             && $latest->next_eligible_at
@@ -43,21 +41,19 @@ class VerificationController extends Controller
     {
         $user = Auth::user();
 
-        // ── Guard 1: sudah verified ──
+        // ── Guards ──
         if ($user->is_verified) {
-            return back()->with('error', 'Kamu sudah terverifikasi.');
+            return $this->respondError($request, 'Kamu sudah terverifikasi.');
         }
 
-        // ── Guard 2: submission aktif ──
         $existing = PortfolioVerification::where('artist_id', $user->user_id)
             ->whereIn('status', ['pending', 'in_review'])
             ->first();
 
         if ($existing) {
-            return back()->with('error', 'Submisimu sedang dalam antrian review. Harap tunggu.');
+            return $this->respondError($request, 'Submisimu sedang dalam antrian review. Harap tunggu.');
         }
 
-        // ── Guard 3: cooldown ──
         $lastRejected = PortfolioVerification::where('artist_id', $user->user_id)
             ->where('status', 'rejected')
             ->latest('reviewed_at')
@@ -65,36 +61,34 @@ class VerificationController extends Controller
 
         if ($lastRejected && $lastRejected->next_eligible_at && now()->lt($lastRejected->next_eligible_at)) {
             $daysLeft = (int) now()->diffInDays($lastRejected->next_eligible_at, false);
-            return back()->with('error', "Kamu bisa submit ulang dalam {$daysLeft} hari lagi.");
+            return $this->respondError($request, "Kamu bisa submit ulang dalam {$daysLeft} hari lagi.");
         }
 
         // ── Validasi ──
+        // Pakai 'image' saja (tidak mimes) supaya kompatibel dengan DataTransfer API
         $request->validate([
             'portfolio_files'      => 'required|array|min:3|max:10',
-            'portfolio_files.*'    => 'required|file|mimes:jpg,jpeg,png,webp,gif,bmp,heic,tiff,avif|max:20480',
+            'portfolio_files.*'    => 'required|file|image|max:20480',
             'social_media_links'   => 'required|array|min:1',
             'social_media_links.*' => 'nullable|url|max:500',
             'declaration'          => 'required|accepted',
         ], [
-            'portfolio_files.required'    => 'Upload minimal 3 file gambar portofolio.',
-            'portfolio_files.min'         => 'Upload minimal 3 file portofolio.',
-            'portfolio_files.max'         => 'Maksimal 10 file portofolio.',
-            'portfolio_files.*.mimes'     => 'Format file harus berupa gambar (JPG, PNG, WEBP, GIF, dll).',
-            'portfolio_files.*.max'       => 'Ukuran tiap file maksimal 20MB.',
+            'portfolio_files.required'  => 'Upload minimal 3 file gambar portofolio.',
+            'portfolio_files.min'       => 'Upload minimal 3 file portofolio.',
+            'portfolio_files.max'       => 'Maksimal 10 file portofolio.',
+            'portfolio_files.*.image'   => 'Semua file harus berupa gambar.',
+            'portfolio_files.*.max'     => 'Ukuran tiap file maksimal 20MB.',
             'social_media_links.required' => 'Tambahkan minimal 1 link sosial media.',
-            'social_media_links.*.url'    => 'Format link tidak valid. Gunakan URL lengkap (https://...).',
-            'declaration.accepted'        => 'Kamu harus menyetujui pernyataan keaslian karya.',
+            'social_media_links.*.url'  => 'Format link tidak valid. Gunakan URL lengkap (https://...).',
+            'declaration.accepted'      => 'Kamu harus menyetujui pernyataan keaslian karya.',
         ]);
 
-        // ── Simpan file ──
+        // ── Upload ke Cloudinary ──
         $filePaths = [];
         foreach ($request->file('portfolio_files') as $file) {
-            $url = \App\Services\CloudinaryService::upload(
-                $file,
-                'verifications/' . $user->user_id
-            );
+            $url = CloudinaryService::upload($file, 'verifications/' . $user->user_id);
             $filePaths[] = [
-                'path' => $url,  // sekarang path = Cloudinary URL
+                'path' => $url,
                 'name' => $file->getClientOriginalName(),
                 'size' => $file->getSize(),
                 'ext'  => strtolower($file->getClientOriginalExtension()),
@@ -111,7 +105,7 @@ class VerificationController extends Controller
         $analyzer = new PortfolioAnalyzer();
         $result   = $analyzer->analyze($request->file('portfolio_files'));
 
-        // ── Buat record ──
+        // ── Simpan ──
         PortfolioVerification::create([
             'artist_id'          => $user->user_id,
             'status'             => 'pending',
@@ -121,6 +115,14 @@ class VerificationController extends Controller
             'ai_score_notes'     => $result['notes'],
             'ai_breakdown'       => $result['breakdown'],
         ]);
+
+        // Kalau request dari fetch/AJAX, return JSON redirect URL
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success'  => true,
+                'redirect' => route('verification.status'),
+            ]);
+        }
 
         return redirect()
             ->route('verification.status')
@@ -139,5 +141,14 @@ class VerificationController extends Controller
         }
 
         return view('pages.verification.status', compact('latest'));
+    }
+
+    // ── Helper: error response untuk normal atau AJAX ──
+    private function respondError(Request $request, string $message)
+    {
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json(['success' => false, 'message' => $message], 422);
+        }
+        return back()->with('error', $message);
     }
 }
