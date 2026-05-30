@@ -1,4 +1,6 @@
 <?php
+// app/Services/SupabaseService.php
+// Tambahkan 'verify' => false HANYA untuk local dev
 
 namespace App\Services;
 
@@ -6,17 +8,20 @@ use GuzzleHttp\Client;
 
 class SupabaseService
 {
-    protected $client;
-    protected $url;
-    protected $key;
+    protected Client $client;
+    protected string $url;
+    protected string $key;
 
     public function __construct()
     {
-        $this->client = new Client();
+        $this->url = config('services.supabase.url');
+        $this->key = config('services.supabase.key');
 
-        $this->url = env('SUPABASE_URL');
-
-        $this->key = env('SUPABASE_KEY');
+        $this->client = new Client([
+            // Disable SSL verify hanya di local (app.env = local)
+            // Di production JANGAN false — hapus baris ini
+            'verify' => app()->environment('production'),
+        ]);
     }
 
     // ===============================
@@ -28,21 +33,40 @@ class SupabaseService
             "{$this->url}/auth/v1/signup",
             [
                 'json' => [
-                    'email' => $email,
+                    'email'    => $email,
                     'password' => $password,
                 ],
-
                 'headers' => [
-                    'apikey' => $this->key,
+                    'apikey'        => $this->key,
                     'Authorization' => 'Bearer ' . $this->key,
-                    'Content-Type' => 'application/json'
-                ]
+                    'Content-Type'  => 'application/json',
+                ],
             ]
         );
 
-        return json_decode(
-            $response->getBody(),
-            true
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    // ===============================
+    // LOGIN
+    // ===============================
+    public function signIn($email, $password)
+    {
+        $response = $this->client->post(
+            "{$this->url}/auth/v1/token?grant_type=password",
+            [
+                'json' => [
+                    'email'    => $email,
+                    'password' => $password,
+                ],
+                'headers' => [
+                    'apikey'        => $this->key,
+                    'Authorization' => 'Bearer ' . $this->key,
+                    'Content-Type'  => 'application/json',
+                ],
+            ]
         );
+
+        return json_decode($response->getBody()->getContents(), true);
     }
 }

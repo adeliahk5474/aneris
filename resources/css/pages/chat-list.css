@@ -1,0 +1,235 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0eff4;
+    --muted: #7c7b87;
+    --accent: #8b5cf6;
+    --accent-dim: rgba(139,92,246,0.15);
+    --green: #22c55e;
+    --red: #ef4444;
+    --check-sent: #7c7b87;
+    --check-read: #8b5cf6;
+}
+
+.chat-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+}
+
+/* ===============================
+   SIDEBAR
+=============================== */
+.chat-sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sidebar-head {
+    padding: 20px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.sidebar-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.sidebar-compose {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s;
+}
+.sidebar-compose:hover { color: var(--text); border-color: var(--accent); }
+
+.conv-list {
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface2) transparent;
+}
+
+/* ── CONVERSATION ITEM ── */
+.conv-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+    text-decoration: none;
+    position: relative;
+}
+.conv-item:hover { background: var(--surface2); text-decoration: none; }
+.conv-item.active {
+    background: var(--accent-dim);
+    border-left-color: var(--accent);
+}
+
+/* Unread item — nama lebih terang */
+.conv-item.unread .conv-name {
+    color: #fff;
+    font-weight: 700;
+}
+.conv-item.unread .conv-preview {
+    color: var(--text);
+    font-weight: 500;
+}
+
+/* ── AVATAR ── */
+.conv-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+.conv-avatar {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface2);
+}
+.conv-online {
+    position: absolute;
+    bottom: 1px; right: 1px;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: var(--green);
+    border: 2px solid var(--surface);
+}
+
+/* ── BODY ── */
+.conv-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.conv-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+    gap: 6px;
+}
+
+.conv-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.conv-time {
+    font-size: 10px;
+    color: var(--muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Unread badge (angka) */
+.conv-unread-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+/* ── PREVIEW ROW ── */
+.conv-bottom {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.conv-preview {
+    font-size: 12px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Checkmark status di preview (untuk pesan milik kita) */
+.conv-check {
+    font-size: 14px;
+    flex-shrink: 0;
+    line-height: 1;
+    color: var(--check-sent);   /* abu = terkirim/belum dibaca */
+}
+.conv-check.read {
+    color: var(--check-read);   /* ungu = sudah dibaca */
+}
+
+/* ── ORDER BADGE ── */
+.conv-order-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: rgba(139,92,246,0.18);
+    color: var(--accent);
+    border: 1px solid rgba(139,92,246,0.35);
+    border-radius: 4px;
+    padding: 1px 5px;
+    flex-shrink: 0;
+    line-height: 1.5;
+}
+
+/* ===============================
+   EMPTY STATE
+=============================== */
+.chat-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--muted);
+    background: var(--bg);
+}
+.chat-empty i { font-size: 48px; opacity: 0.2; }
+.chat-empty span { font-size: 14px; }
+
+/* ===============================
+   RESPONSIVE
+=============================== */
+@media (max-width: 768px) {
+    .chat-layout { grid-template-columns: 1fr; }
+    .chat-empty { display: none; }
+}

@@ -21,10 +21,41 @@ class User extends Authenticatable
         'role',
         'avatar',
         'bio',
+        'is_verified',
         'country'
     ];
 
     protected $hidden = ['password', 'remember_token'];
+
+    protected function casts(): array
+    {
+        return [
+            'is_verified' => 'boolean',
+        ];
+    }
+
+    // ── HELPER METHODS ──
+    public function isVerifiedArtist(): bool
+    {
+        return $this->role === 'artist' && $this->is_verified;
+    }
+
+    public function canUploadCommission(): bool
+    {
+        return $this->isVerifiedArtist();
+    }
+
+    // Relasi ke verifikasi terbaru
+    public function latestVerification()
+    {
+        return $this->hasOne(\App\Models\PortfolioVerification::class, 'artist_id', 'user_id')
+            ->latest();
+    }
+
+    public function verifications()
+    {
+        return $this->hasMany(\App\Models\PortfolioVerification::class, 'artist_id', 'user_id');
+    }
 
     // 👇 Tambahkan fungsi ini supaya UUID dibuat otomatis
     protected static function boot()
@@ -109,8 +140,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Chat::class, 'sender_id');
     }
-
-
 
     public function commissionServices()
     {

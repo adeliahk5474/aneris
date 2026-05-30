@@ -37,7 +37,7 @@ class Artwork extends Model
 
     public function category()
     {
-        return $this->belongsTo(Category::class, 'category_id');
+        return $this->belongsTo(Category::class, 'category_id', 'category_id');
     }
 
     // Compatibility accessors: some views expect `preview_url` or `file_url`

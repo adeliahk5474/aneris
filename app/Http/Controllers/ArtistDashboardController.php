@@ -13,28 +13,35 @@ class ArtistDashboardController extends Controller
     public function index()
     {
         $artist = Auth::user();
+        $verification = \App\Models\PortfolioVerification::where('artist_id', $artist->user_id)
+            ->latest()
+            ->first();
         $artistId = $artist->user_id;
 
         // ===============================
-        // STATISTIK (ORDER BASED)
+        // ACTIVE (sedang kerja)
         // ===============================
-
-        // Sedang dikerjakan
         $activeCommissions = Order::where('artist_id', $artistId)
-            ->where('status', 'in_progress')
+            ->whereIn('status', ['in_progress', 'revision'])
             ->count();
 
-        // Pending (belum diterima)
+        // ===============================
+        // PENDING (belum di-accept artist)
+        // ===============================
         $pendingCommissions = Order::where('artist_id', $artistId)
             ->where('status', 'pending')
             ->count();
 
-        // Total client unik
+        // ===============================
+        // CLIENT UNIK
+        // ===============================
         $activeClients = Order::where('artist_id', $artistId)
             ->distinct('client_id')
             ->count('client_id');
 
-        // Earnings (hanya completed)
+        // ===============================
+        // EARNINGS (hanya completed)
+        // ===============================
         $totalEarnings = Order::where('artist_id', $artistId)
             ->where('status', 'completed')
             ->sum('total_price');
@@ -52,19 +59,20 @@ class ArtistDashboardController extends Controller
         $totalServices = CommissionService::where('artist_id', $artistId)->count();
 
         // ===============================
-        // NOTIF (order pending)
+        // NOTIF (pending + waiting client)
         // ===============================
         $recentNotifications = Order::where('artist_id', $artistId)
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'waiting_client'])
             ->count();
 
         // ===============================
-        // GRAFIK (12 BULAN)
+        // CHART 12 BULAN (TETAP AMAN)
         // ===============================
         $monthlyLabels = [];
         $monthlyEarnings = [];
 
         for ($i = 11; $i >= 0; $i--) {
+
             $month = now()->subMonths($i);
 
             $monthlyLabels[] = $month->format('M');
@@ -85,9 +93,20 @@ class ArtistDashboardController extends Controller
             ->take(10)
             ->get();
 
-        // ===============================
-        // RETURN VIEW
-        // ===============================
+        $activeForOverview = $incomingOrders->filter(fn($o) => in_array($o->status, [
+            'pending',
+            'paid',
+            'in_progress',
+            'revision',
+            'revision_requested',
+            'waiting_client',
+        ]));
+
+        $myServices = CommissionService::where('artist_id', $artistId)
+            ->with('category')
+            ->latest()
+            ->get();
+
         return view('dashboards.artist', compact(
             'artist',
             'activeCommissions',
@@ -99,7 +118,10 @@ class ArtistDashboardController extends Controller
             'recentNotifications',
             'monthlyLabels',
             'monthlyEarnings',
-            'incomingOrders'
+            'incomingOrders',
+            'activeForOverview',
+            'verification',
+            'myServices'
         ));
     }
 }

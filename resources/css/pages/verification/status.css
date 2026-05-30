@@ -1,0 +1,193 @@
+/* resources/css/pages/verification/status.css */
+
+.status-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 16px 80px;
+}
+
+.status-card {
+    width: 100%;
+    max-width: 520px;
+    background: var(--surface, #1a1a2e);
+    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-radius: 20px;
+    padding: 40px 36px;
+    text-align: center;
+}
+
+/* ── ICON ── */
+.status-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 20px;
+}
+.status-icon.approved  { background: rgba(52,211,153,0.15);  color: #34d399; }
+.status-icon.pending   { background: rgba(251,191,36,0.15);  color: #fbbf24; }
+.status-icon.in-review { background: rgba(96,165,250,0.15);  color: #60a5fa; }
+.status-icon.rejected  { background: rgba(248,113,113,0.15); color: #f87171; }
+.status-icon.empty     { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+.status-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+}
+
+.status-sub {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+/* ── META LIST ── */
+.status-meta-list {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.status-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.status-meta-row:last-child { border-bottom: none; }
+
+.meta-label { font-size: 13px; color: var(--muted); }
+.meta-value { font-size: 13px; color: var(--text); font-weight: 500; }
+
+.status-tip {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    opacity: 0.7;
+    margin-bottom: 4px;
+}
+
+/* ── REJECTION NOTES ── */
+.rejection-notes {
+    background: rgba(248,113,113,0.07);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.rejection-notes-head {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f87171;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.rejection-notes-body {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+/* ── SCORE SUMMARY ── */
+.score-summary {
+    margin-bottom: 20px;
+}
+.score-summary-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+.score-summary-value {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.score-summary-value span { font-size: 20px; opacity: 0.5; }
+.score-summary-value.pass { color: #34d399; }
+.score-summary-value.fail { color: #f87171; }
+.score-summary-min { font-size: 11px; color: var(--muted); opacity: 0.6; }
+
+/* ── COOLDOWN ── */
+.cooldown-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(251,191,36,0.07);
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: left;
+    margin-bottom: 20px;
+}
+.cooldown-box > i { color: #fbbf24; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.cooldown-box strong { color: var(--text); }
+
+/* ── TIPS ── */
+.rejection-tips {
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: left;
+    margin-top: 16px;
+}
+.tips-head {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 10px;
+}
+.tips-head i { color: #fbbf24; }
+.rejection-tips ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+/* ── BTN ── */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    margin-bottom: 4px;
+    transition: opacity 0.2s;
+}
+.btn-primary:hover { opacity: 0.85; }

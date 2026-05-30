@@ -1,0 +1,462 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --surface3: #252530;
+    --border: rgba(255, 255, 255, 0.08);
+    --border2: rgba(255, 255, 255, 0.13);
+    --text: #f0eff4;
+    --muted: #7c7b87;
+    --accent: #8b5cf6;
+    --accent-dim: rgba(139, 92, 246, 0.15);
+    --green: #22c55e;
+    --red: #ef4444;
+    --topnav-height: 60px;
+}
+
+html,
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+}
+
+/* ── TOPNAV ─────────────────────────────── */
+#app-topnav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--topnav-height);
+    background: rgba(13, 13, 15, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    gap: 32px;
+}
+
+.app-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.app-logo-mark {
+    width: 30px;
+    height: 30px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.app-logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+}
+
+.app-nav-center {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    justify-content: center;
+}
+
+.app-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    transition: color .2s, background .2s;
+    position: relative;
+}
+
+.app-nav-link:hover {
+    color: var(--text);
+    background: var(--surface2);
+    text-decoration: none;
+}
+
+.app-nav-link.active {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.app-nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+}
+
+.app-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.app-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 18px;
+    text-decoration: none;
+    transition: color .2s, background .2s;
+    position: relative;
+}
+
+.app-icon-btn:hover {
+    color: var(--text);
+    background: var(--surface2);
+    text-decoration: none;
+}
+
+/* Notif badge */
+.notif-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+}
+
+.btn-artist {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color .2s, background .2s;
+    white-space: nowrap;
+}
+
+.btn-artist:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.btn-signup {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 18px;
+    border-radius: 8px;
+    background: var(--green);
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity .2s;
+    white-space: nowrap;
+}
+
+.btn-signup:hover {
+    opacity: .88;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ── PROFILE DROPDOWN ── */
+.profile-menu-wrap { position: relative; }
+
+.profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px 4px 4px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+    font-family: 'Outfit', sans-serif;
+    text-decoration: none;
+}
+
+.profile-trigger:hover,
+.profile-trigger.open {
+    background: var(--surface2);
+    border-color: var(--border2);
+}
+
+.app-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border);
+    transition: border-color .2s;
+    flex-shrink: 0;
+    display: block;
+}
+
+.profile-trigger:hover .app-avatar,
+.profile-trigger.open .app-avatar { border-color: var(--accent); }
+
+.profile-trigger-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-trigger-chevron {
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform .25s ease;
+}
+
+.profile-trigger.open .profile-trigger-chevron { transform: rotate(180deg); }
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 220px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    padding: 6px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5), 0 4px 16px rgba(0,0,0,.3);
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 2000;
+}
+
+.profile-dropdown.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: all;
+}
+
+.pd-user-info {
+    padding: 10px 12px 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+}
+
+.pd-user-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pd-user-email {
+    font-size: 11px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pd-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .15s, background .15s;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: 'Outfit', sans-serif;
+}
+
+.pd-item i { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+
+.pd-item:hover {
+    color: var(--text);
+    background: var(--surface2);
+    text-decoration: none;
+}
+
+.pd-item.danger { color: #ef4444; }
+.pd-item.danger:hover { color: #ff6b6b; background: rgba(239,68,68,.1); }
+
+.pd-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+/* Unread dot di notif icon */
+.has-unread .notif-badge { display: block; }
+.notif-badge { display: none; }
+
+.app-topnav-spacer { height: var(--topnav-height); }
+.app-content { min-height: calc(100vh - var(--topnav-height)); }
+
+@media (max-width: 768px) {
+    #app-topnav { padding: 0 16px; gap: 16px; }
+    .app-logo-text { display: none; }
+    .app-nav-link span { display: none; }
+    .app-nav-link { padding: 6px 10px; }
+    .btn-artist { display: none; }
+    .profile-trigger-name { display: none; }
+    .profile-trigger { padding: 4px; }
+}
+/* ── CHAT NOTIFICATION TOAST ── */
+#chat-notif-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    background: #1e1e2e;
+    color: #fff;
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    max-width: 320px;
+    width: 100%;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.08);
+
+    /* hidden by default */
+    opacity: 0;
+    transform: translateY(16px);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+#chat-notif-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+#chat-notif-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+#chat-notif-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+#chat-notif-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+#chat-notif-name {
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.9;
+    margin-bottom: 2px;
+}
+
+#chat-notif-message {
+    font-size: 13px;
+    opacity: 0.65;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 210px;
+}
+
+#chat-notif-close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 2px;
+    flex-shrink: 0;
+    transition: color 0.15s;
+}
+
+#chat-notif-close:hover {
+    color: #fff;
+}
+
+/* ── CHAT NAV BADGE ── */
+.chat-nav-badge {
+    display: none;
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--accent, #e94560);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    pointer-events: none;
+}
+.chat-nav-badge.visible {
+    display: inline-block;
+}

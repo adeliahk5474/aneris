@@ -1,0 +1,282 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --surface3: #252530;
+    --border: rgba(255, 255, 255, 0.08);
+    --border2: rgba(255, 255, 255, 0.13);
+    --text: #f0eff4;
+    --muted: #7c7b87;
+    --accent: #8b5cf6;
+    --red: #ef4444;
+    --ordernav-height: 60px;
+}
+
+#order-topnav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--ordernav-height);
+    background: rgba(13, 13, 15, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Back button */
+.ordernav-back {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 20px;
+    text-decoration: none;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    transition: color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+}
+
+.ordernav-back:hover {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.18);
+    text-decoration: none;
+}
+
+/* Nav links tengah */
+.ordernav-center {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    justify-content: center;
+}
+
+.ordernav-link {
+    display: flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s, background 0.2s;
+    position: relative;
+}
+
+.ordernav-link:hover {
+    color: var(--text);
+    background: var(--surface2);
+    text-decoration: none;
+}
+
+.ordernav-link.active {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.ordernav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+}
+
+/* Nav kanan */
+.ordernav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.ordernav-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 18px;
+    text-decoration: none;
+    transition: color 0.2s, background 0.2s;
+}
+
+.ordernav-icon:hover {
+    color: var(--text);
+    background: var(--surface2);
+    text-decoration: none;
+}
+
+/* ===============================
+   PROFILE DROPDOWN (ordernav)
+=============================== */
+.on-profile-wrap {
+    position: relative;
+}
+
+.on-profile-trigger {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.on-profile-trigger:hover,
+.on-profile-trigger.open {
+    border-color: var(--accent);
+}
+
+.on-profile-trigger img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+.on-profile-trigger i {
+    font-size: 18px;
+    color: var(--muted);
+}
+
+/* Dropdown panel */
+.on-profile-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 220px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    padding: 6px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 2000;
+}
+
+.on-profile-dropdown.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: all;
+}
+
+.on-pd-user-info {
+    padding: 10px 12px 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+}
+
+.on-pd-user-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.on-pd-user-email {
+    font-size: 11px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.on-pd-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: 'Outfit', sans-serif;
+}
+
+.on-pd-item i {
+    font-size: 15px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.on-pd-item:hover {
+    color: var(--text);
+    background: var(--surface2);
+    text-decoration: none;
+}
+
+.on-pd-item.danger {
+    color: var(--red);
+}
+
+.on-pd-item.danger:hover {
+    color: #ff6b6b;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.on-pd-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 0;
+}
+
+.ordernav-spacer {
+    height: var(--ordernav-height);
+}
+
+@media (max-width: 768px) {
+    #order-topnav {
+        padding: 0 14px;
+    }
+
+    .ordernav-link span {
+        display: none;
+    }
+
+    .ordernav-link {
+        padding: 6px 10px;
+    }
+}

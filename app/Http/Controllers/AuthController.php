@@ -28,7 +28,9 @@ class AuthController extends Controller
             return redirect()->route('home');
         }
 
-        return view('auth.auth');
+        $openRegisterForm = (bool) (old('full_name') || old('role'));
+
+        return view('auth.auth', compact('openRegisterForm'));
     }
 
     // ===============================

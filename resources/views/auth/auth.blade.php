@@ -1,163 +1,242 @@
+{{-- resources/views/auth/auth.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login & Register</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            background: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .auth-container {
-            background: #fff;
-            padding: 30px;
-            border-radius: 15px;
-            width: 400px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .tabs {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
-        }
-
-        .tab {
-            cursor: pointer;
-            padding-bottom: 5px;
-            border-bottom: 2px solid transparent;
-            font-weight: 600;
-        }
-
-        .tab.active {
-            color: #7c3aed;
-            border-color: #7c3aed;
-        }
-
-        form {
-            display: none;
-        }
-
-        form.active {
-            display: block;
-        }
-
-        input,
-        select,
-        button {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 12px;
-            border-radius: 8px;
-        }
-
-        button {
-            background: #7c3aed;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-        }
-
-        .error {
-            color: #e11d48;
-            font-size: 13px;
-            margin-bottom: 10px;
-        }
-
-        .success {
-            color: green;
-            font-size: 13px;
-            margin-bottom: 10px;
-        }
-    </style>
+    <title>Aneris — Join the Community</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    @vite(['resources/css/auth.css'])
 </head>
 
 <body>
-    <div class="auth-container">
-        <div class="tabs">
-            <div class="tab active" onclick="showForm('login')">Login</div>
-            <div class="tab" onclick="showForm('register')">Register</div>
+
+    <div class="auth-layout">
+
+        {{-- ===========================
+         LEFT — Visual
+    =========================== --}}
+        <div class="auth-visual">
+            <div class="visual-top">
+                <div class="visual-logo">
+                    <div class="visual-logo-mark">A</div>
+                    <span class="visual-logo-text">Aneris</span>
+                </div>
+                <div class="visual-headline" id="visual-headline">Creative Exchange</div>
+                <div class="visual-sub" id="visual-sub">
+                    The exclusive digital gallery for professional services and artist discovery.
+                </div>
+            </div>
+
+            <div class="visual-bottom">
+                <div class="visual-card">
+                    <div class="visual-card-title">Curated Discovery</div>
+                    <div class="visual-card-text">
+                        Connect with elite creators using our dynamic, social-inspired feed.
+                        From concept art to high-end motion graphics, find your next masterpiece here.
+                    </div>
+                    <div class="visual-avatars">
+                        <div class="visual-avatar" style="background: linear-gradient(135deg,#8b5cf6,#ec4899);"></div>
+                        <div class="visual-avatar" style="background: linear-gradient(135deg,#06b6d4,#8b5cf6);"></div>
+                        <div class="visual-avatar" style="background: linear-gradient(135deg,#f59e0b,#ef4444);"></div>
+                        <span class="visual-avatar-text" id="visual-avatar-text">Joined by 10k+ artists</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        @if(session('success'))
-        <p class="success">{{ session('success') }}</p>
-        @endif
-        @if($errors->any())
-        <p class="error">{{ $errors->first() }}</p>
-        @endif
+        {{-- ===========================
+         RIGHT — Form
+    =========================== --}}
+        <div class="auth-form-panel">
 
-        <form id="login" class="active" method="POST" action="{{ route('auth.login') }}">
-            @csrf
-            <input type="email" name="email" placeholder="Email" required>
-
-            <div style="position:relative;">
-                <input type="password" id="loginPassword" name="password" placeholder="Password" required>
-                <span onclick="togglePassword('loginPassword', this)"
-                    style="position:absolute;right:1px;top:40%;transform:translateY(-50%);cursor:pointer;font-size:12px;color:#555;">
-                    Show
-                </span>
+            {{-- Tabs --}}
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="showForm('login')">Login</div>
+                <div class="auth-tab" onclick="showForm('register')">Register</div>
             </div>
 
-            <button type="submit">Login</button>
-        </form>
+            {{-- Alerts --}}
+            @if(session('success'))
+            <div class="alert-success">{{ session('success') }}</div>
+            @endif
 
-        <form id="register" method="POST" action="{{ route('auth.register') }}">
-            @csrf
-            <input type="text" name="full_name" placeholder="Full Name" required>
-            <input type="email" name="email" placeholder="Email" required>
+            @if($errors->any())
+            <div class="alert-error">{{ $errors->first() }}</div>
+            @endif
 
-            <div style="position:relative;">
-                <input type="password" id="registerPassword" name="password" placeholder="Password" required>
-                <span onclick="togglePassword('registerPassword', this)"
-                    style="position:absolute;right:1px;top:40%;transform:translateY(-50%);cursor:pointer;font-size:12px;color:#555;">
-                    Show
-                </span>
+            {{-- ===========================
+             LOGIN FORM
+        =========================== --}}
+            <div class="auth-form active" id="login">
+
+                <div class="form-headline">Welcome back</div>
+                <div class="form-sub">Enter your details to access your account.</div>
+
+                <form method="POST" action="{{ route('auth.login') }}">
+                    @csrf
+
+                    {{-- Email --}}
+                    <div class="field-group">
+                        <div class="field-label">Email address</div>
+                        <div class="field-wrap">
+                            <i class="bi bi-envelope field-icon"></i>
+                            <input type="email" name="email" class="field-input"
+                                placeholder="name@example.com"
+                                value="{{ old('email') }}" required autocomplete="email">
+                        </div>
+                    </div>
+
+                    {{-- Password --}}
+                    <div class="field-group">
+                        <div class="field-label">
+                            Password
+                            <a href="#">Forgot password?</a>
+                        </div>
+                        <div class="field-wrap">
+                            <i class="bi bi-lock field-icon"></i>
+                            <input type="password" name="password" class="field-input" id="loginPass"
+                                placeholder="••••••••" required autocomplete="current-password">
+                            <button type="button" class="field-toggle" onclick="togglePass('loginPass', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Remember --}}
+                    <div class="check-row">
+                        <input type="checkbox" name="remember" id="remember" class="check-input">
+                        <label for="remember" class="check-label">Remember me for 30 days</label>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Sign In</button>
+
+                </form>
+
+                <div class="switch-text">
+                    Don't have an account? <a href="javascript:void(0)" onclick="showForm('register')">Register now</a>
+                </div>
+
             </div>
 
-            <div style="position:relative;">
-                <input type="password" id="confirmPassword" name="password_confirmation" placeholder="Confirm Password" required>
-                <span onclick="togglePassword('confirmPassword', this)"
-                    style="position:absolute;right:1px;top:40%;transform:translateY(-50%);cursor:pointer;font-size:12px;color:#555;">
-                    Show
-                </span>
+            {{-- ===========================
+             REGISTER FORM
+        =========================== --}}
+            <div class="auth-form" id="register">
+
+                <div class="form-headline">Create your account</div>
+                <div class="form-sub">Join the community of premium digital artists and clients.</div>
+
+                <form method="POST" action="{{ route('auth.register') }}">
+                    @csrf
+
+                    {{-- Identity selector --}}
+                    <div class="identity-label">Select your identity</div>
+                    <div class="identity-grid">
+                        <label class="identity-card selected" id="card-artist">
+                            <input type="radio" name="role" value="artist" checked
+                                onchange="selectIdentity('artist')">
+                            <span class="identity-icon">🎨</span>
+                            <div class="identity-title">I am an Artist</div>
+                            <div class="identity-desc">Showcase and sell your professional work.</div>
+                        </label>
+                        <label class="identity-card" id="card-client">
+                            <input type="radio" name="role" value="client"
+                                onchange="selectIdentity('client')">
+                            <span class="identity-icon">🔍</span>
+                            <div class="identity-title">I am a Client</div>
+                            <div class="identity-desc">Discover and commission exclusive talent.</div>
+                        </label>
+                    </div>
+
+                    {{-- Full name --}}
+                    <div class="field-group">
+                        <div class="field-label">Full Name</div>
+                        <div class="field-wrap">
+                            <i class="bi bi-person field-icon"></i>
+                            <input type="text" name="full_name" class="field-input"
+                                placeholder="Enter your legal name"
+                                value="{{ old('full_name') }}" required>
+                        </div>
+                    </div>
+
+                    {{-- Email --}}
+                    <div class="field-group">
+                        <div class="field-label">Email Address</div>
+                        <div class="field-wrap">
+                            <i class="bi bi-envelope field-icon"></i>
+                            <input type="email" name="email" class="field-input"
+                                placeholder="name@example.com"
+                                value="{{ old('email') }}" required>
+                        </div>
+                    </div>
+
+                    {{-- Password row --}}
+                    <div class="field-row">
+                        <div class="field-group">
+                            <div class="field-label">Password</div>
+                            <div class="field-wrap">
+                                <i class="bi bi-lock field-icon"></i>
+                                <input type="password" name="password" class="field-input" id="regPass"
+                                    placeholder="••••••••" required>
+                                <button type="button" class="field-toggle" onclick="togglePass('regPass', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <div class="field-label">Confirm Password</div>
+                            <div class="field-wrap">
+                                <i class="bi bi-lock field-icon"></i>
+                                <input type="password" name="password_confirmation" class="field-input" id="regPassConf"
+                                    placeholder="••••••••" required>
+                                <button type="button" class="field-toggle" onclick="togglePass('regPassConf', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Terms --}}
+                    <div class="check-row">
+                        <input type="checkbox" id="terms" class="check-input" required>
+                        <label for="terms" class="check-label">
+                            I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Create Account</button>
+
+                </form>
+
+                <div class="switch-text">
+                    Already have an account? <a href="javascript:void(0)" onclick="showForm('login')">Log in</a>
+                </div>
+
             </div>
 
-            <select name="role" required>
-                <option value="">-- Select Role --</option>
-                <option value="client">Client</option>
-                <option value="artist">Artist</option>
-            </select>
-            <button type="submit">Register</button>
-        </form>
+            {{-- Footer --}}
+            <div class="auth-footer">
+                <a href="#">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Cookies</a>
+            </div>
+
+        </div>
     </div>
 
-    <script>
-        function showForm(type) {
-            document.querySelectorAll('form').forEach(f => f.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(type).classList.add('active');
-            document.querySelector(`.tab[onclick="showForm('${type}')"]`).classList.add('active');
-        }
+    @vite(['resources/js/auth.js'])
 
-        function togglePassword(inputId, el) {
-            const input = document.getElementById(inputId);
-            if (input.type === "password") {
-                input.type = "text";
-                el.innerText = "Hide";
-            } else {
-                input.type = "password";
-                el.innerText = "Show";
-            }
-        }
+    {{-- Auto switch ke register jika ada error register --}}
+    @if($openRegisterForm)
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            showForm('register');
+        });
     </script>
+    @endif
+
 </body>
 
 </html>

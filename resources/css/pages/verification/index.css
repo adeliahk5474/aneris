@@ -1,0 +1,188 @@
+/* resources/css/pages/verification/index.css */
+
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+.page-title { font-size: 22px; font-weight: 700; color: var(--text); }
+.page-sub   { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+.table-card {
+    background: var(--surface, #1a1a2e);
+    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.table-title { font-size: 15px; font-weight: 700; color: var(--text); }
+
+.table-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ── FILTER ── */
+.filter-bar {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid transparent;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+.filter-chip:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+.filter-chip.active {
+    background: rgba(139,92,246,0.15);
+    border-color: rgba(139,92,246,0.3);
+    color: #a78bfa;
+}
+
+.filter-count {
+    background: rgba(255,255,255,0.1);
+    border-radius: 999px;
+    padding: 1px 6px;
+    font-size: 10px;
+}
+
+.sort-select {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+}
+
+/* ── TABLE ── */
+.verif-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.verif-table thead tr {
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.verif-table th {
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.verif-row {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.verif-row:hover { background: rgba(255,255,255,0.03); }
+.verif-row:last-child { border-bottom: none; }
+
+.verif-table td { padding: 12px 16px; font-size: 13px; }
+
+.artist-name  { font-weight: 600; color: var(--text); }
+.artist-email { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.col-id   { color: var(--muted); font-size: 12px; }
+.col-meta { color: var(--muted); font-size: 12px; }
+.col-meta i { margin-right: 4px; }
+.col-date  { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.col-empty { color: var(--muted); font-size: 11px; }
+.col-arrow { color: var(--muted); }
+
+/* ── SCORE BAR ── */
+.score-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 100px;
+}
+
+.score-bar {
+    flex: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.score-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.4s ease;
+}
+.score-bar-fill.high   { background: #34d399; }
+.score-bar-fill.medium { background: #fbbf24; }
+.score-bar-fill.low    { background: #f87171; }
+
+.score-num { font-size: 12px; font-weight: 700; }
+.score-num.high   { color: #34d399; }
+.score-num.medium { color: #fbbf24; }
+.score-num.low    { color: #f87171; }
+
+/* ── BADGE ── */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+.badge-pending   { background: rgba(251,191,36,0.15);  color: #fbbf24; }
+.badge-in_review { background: rgba(96,165,250,0.15);  color: #60a5fa; }
+.badge-approved  { background: rgba(52,211,153,0.15);  color: #34d399; }
+.badge-rejected  { background: rgba(248,113,113,0.15); color: #f87171; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+    text-align: center;
+    padding: 56px 20px;
+    color: var(--muted);
+    font-size: 13px;
+}
+.empty-state i {
+    font-size: 36px;
+    opacity: 0.15;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.pagination-wrap {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: flex-end;
+}

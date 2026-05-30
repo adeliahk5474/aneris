@@ -1,152 +1,98 @@
+{{-- resources/views/pages/chat_list.blade.php --}}
 @extends('layouts.app')
-@section('title', 'Chats')
+
+@section('title', 'Messages — Aneris')
 
 @section('content')
 
-<div class="container py-3">
+@vite('resources/css/pages/chat-list.css')
 
-    <h5 class="mb-3">Messages</h5>
+<div class="chat-layout">
 
-    <div class="list-group">
-
-        @forelse($conversations as $chat)
-
-        @php
-
-        $me = auth()->user()->user_id;
-
-        $otherUser = $chat->sender_id == $me
-        ? $chat->receiver
-        : $chat->sender;
-
-        $lastMessage = $chat->message
-        ? $chat->message
-        : ($chat->image ? '📷 Image' : '-');
-
-        // ================= UNREAD =================
-        $unreadMessages = \App\Models\Chat::where('sender_id', $otherUser->user_id)
-        ->where('receiver_id', $me)
-        ->where('is_read', false)
-        ->count();
-
-        @endphp
-
-        {{-- ORDER CHAT --}}
-        @if($chat->order_id)
-
-        <a href="{{ route('chat.index', ['order_id' => $chat->order_id]) }}"
-            class="list-group-item list-group-item-action d-flex align-items-center">
-
-            <img src="{{ $otherUser->avatar ?? 'https://via.placeholder.com/48' }}"
-                width="48"
-                height="48"
-                class="rounded-circle me-3">
-
-            <div class="flex-fill">
-
-                <div class="d-flex justify-content-between">
-
-                    <strong>
-                        {{ $otherUser->name }}
-                        <span class="text-primary small">
-                            (Order)
-                        </span>
-                    </strong>
-
-                    <div class="d-flex align-items-center gap-2">
-
-                        <small class="text-muted">
-                            {{ $chat->created_at->diffForHumans() }}
-                        </small>
-
-                        @if($unreadMessages > 0)
-
-                        <span class="badge rounded-pill bg-primary"
-                            style="font-size:10px;">
-
-                            {{ $unreadMessages }}
-
-                        </span>
-
-                        @endif
-
-                    </div>
-
-                </div>
-
-                <div class="small text-muted">
-                    {{ $lastMessage }}
-                </div>
-
-            </div>
-
-        </a>
-
-        @else
-
-        {{-- DM CHAT --}}
-        <a href="{{ route('chat.index', ['user_id' => $otherUser->user_id]) }}"
-            class="list-group-item list-group-item-action d-flex align-items-center">
-
-            <img src="{{ $otherUser->avatar ?? 'https://via.placeholder.com/48' }}"
-                width="48"
-                height="48"
-                class="rounded-circle me-3">
-
-            <div class="flex-fill">
-
-                <div class="d-flex justify-content-between align-items-center">
-
-                    <strong>
-                        {{ $otherUser->name }}
-                    </strong>
-
-                    <div class="d-flex align-items-center gap-2">
-
-                        <small class="text-muted">
-                            {{ $chat->created_at->diffForHumans() }}
-                        </small>
-
-                        @if($unreadMessages > 0)
-
-                        <span class="badge rounded-pill bg-primary"
-                            style="
-                        font-size:10px;
-                        min-width:20px;
-                        height:20px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                    ">
-
-                            {{ $unreadMessages }}
-
-                        </span>
-
-                        @endif
-
-                    </div>
-
-                </div>
-
-                <div class="small text-muted">
-                    {{ $lastMessage }}
-                </div>
-
-            </div>
-
-        </a>
-
-        @endif
-
-        @empty
-
-        <div class="text-center text-muted py-5">
-            No messages yet
+    {{-- SIDEBAR --}}
+    <div class="chat-sidebar">
+        <div class="sidebar-head">
+            <span class="sidebar-title">Messages</span>
+            <a href="#" class="sidebar-compose" aria-label="New message">
+                <i class="bi bi-pencil-square"></i>
+            </a>
         </div>
 
-        @endforelse
+        <div class="conv-list">
+            @php $myId = Auth::user()->user_id; @endphp
 
+            @forelse($conversations as $conv)
+
+            @php
+            $href = $conv->order_id
+            ? route('chat.index', ['order_id' => $conv->order_id])
+            : route('chat.index', ['user_id' => $conv->other->user_id ?? '']);
+
+            $isMine = $conv->sender_id === $myId;
+            $isUnread = !$isMine && !$conv->is_read;
+            $isRead = $isMine && $conv->is_read;
+            @endphp
+
+            <a href="{{ $href }}"
+                class="conv-item {{ $conv->isActive ? 'active' : '' }} {{ $isUnread ? 'unread' : '' }}"
+                data-href="{{ $href }}">
+
+                <div class="conv-avatar-wrap">
+                    <img
+                        src="{{ $conv->other->avatar ?? asset('images/default-avatar.png') }}"
+                        class="conv-avatar"
+                        alt="{{ $conv->other->name ?? '' }}">
+                    <span class="conv-online"></span>
+                </div>
+
+                <div class="conv-body">
+                    {{-- TOP: nama + waktu + unread badge --}}
+                    <div class="conv-top">
+                        <span class="conv-name">{{ $conv->other->name ?? 'Unknown' }}</span>
+
+                        @if($conv->order_id)
+                        <span class="conv-order-tag">Order</span>
+                        @endif
+
+                        <span class="conv-time">
+                            {{ $conv->created_at?->diffForHumans(null, true) ?? '' }}
+                        </span>
+
+                        @if($isUnread)
+                        <span class="conv-unread-badge">1</span>
+                        @endif
+                    </div>
+
+                    {{-- BOTTOM: checkmark + preview --}}
+                    <div class="conv-bottom">
+                        @if($isMine)
+                        <i class="bi bi-check2-all conv-check {{ $isRead ? 'read' : '' }}"></i>
+                        @endif
+
+                        <span class="conv-preview">
+                            @if($conv->image)
+                            📎 Attachment
+                            @else
+                            {{ Str::limit($conv->message, 36) }}
+                            @endif
+                        </span>
+                    </div>
+                </div>
+
+            </a>
+
+            @empty
+            <div style="padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px;">
+                No conversations yet.
+            </div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- PLACEHOLDER saat tidak ada thread terpilih --}}
+    <div class="chat-empty">
+        <i class="bi bi-chat-dots"></i>
+        <span>Select a conversation to start chatting</span>
     </div>
 
 </div>

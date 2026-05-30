@@ -1,307 +1,195 @@
+{{-- resources/views/pages/chat_thread.blade.php --}}
 @extends('layouts.app')
-@section('title', 'Chat')
+
+@section('title', 'Chat — Aneris')
 
 @section('content')
 
-<style>
-    .chat-page {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        background: #f5f5f5;
-    }
+@vite('resources/css/pages/chat-thread.css')
 
-    html,
-    body {
-        height: 100%;
-        overflow: hidden;
-    }
+<div class="chat-layout">
 
-    /* ================= HEADER ================= */
-    .chat-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 15px;
-        background: #fff;
-        border-bottom: 1px solid #ddd;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-    }
+    {{-- ── SIDEBAR ── --}}
+    <div class="chat-sidebar">
+        <div class="sidebar-head">
+            <span class="sidebar-title">Messages</span>
+            <a href="#" class="sidebar-compose"><i class="bi bi-pencil-square"></i></a>
+        </div>
 
-    .chat-header img {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
+        <div class="conv-list">
+            @php $myId = Auth::user()->user_id; @endphp
 
-    .chat-header .back-btn {
-        text-decoration: none;
-        font-size: 22px;
-        color: #000;
-    }
+            @forelse($conversations ?? [] as $conv)
+            @php
+            $convHref = $conv->order_id
+            ? route('chat.index', ['order_id' => $conv->order_id])
+            : route('chat.index', ['user_id' => $conv->other->user_id ?? '']);
 
-    /* ================= CHAT BOX ================= */
-    .chat-box {
-        flex: 1;
-        overflow-y: auto;
-        padding: 15px;
-        padding-bottom: 200px;
-        scroll-behavior: smooth;
-    }
+            $isMine = $conv->sender_id === $myId;
+            $isUnread = !$isMine && !$conv->is_read;
+            $isRead = $isMine && $conv->is_read;
+            @endphp
 
-    .chat-row {
-        display: flex;
-        margin-bottom: 12px;
-    }
+            <a href="{{ $convHref }}"
+                class="conv-item {{ $conv->isActive ? 'active' : '' }} {{ $isUnread ? 'unread' : '' }}"
+                data-href="{{ $convHref }}">
 
-    .chat-row.me {
-        justify-content: flex-end;
-    }
+                <div class="conv-avatar-wrap">
+                    <img src="{{ $conv->other->avatar ?? asset('images/default-avatar.png') }}"
+                        class="conv-avatar" alt="{{ $conv->other->name ?? '' }}">
+                    <span class="conv-online"></span>
+                </div>
 
-    .chat-row.other {
-        justify-content: flex-start;
-    }
+                <div class="conv-body">
+                    <div class="conv-top">
+                        <span class="conv-name">{{ $conv->other->name ?? 'Unknown' }}</span>
+                        @if($conv->order_id)
+                        <span class="conv-order-tag">Order</span>
+                        @endif
+                        <span class="conv-time">{{ $conv->created_at?->diffForHumans(null, true) ?? '' }}</span>
+                        @if($isUnread)
+                        <span class="conv-unread-badge">1</span>
+                        @endif
+                    </div>
+                    <div class="conv-bottom">
+                        @if($isMine)
+                        <i class="bi bi-check2-all conv-check {{ $isRead ? 'read' : '' }}"></i>
+                        @endif
+                        <span class="conv-preview">
+                            @if($conv->image) 📎 Attachment
+                            @else {{ Str::limit($conv->message, 36) }}
+                            @endif
+                        </span>
+                    </div>
+                </div>
 
-    .bubble {
-        max-width: 75%;
-        padding: 10px 14px;
-        border-radius: 18px;
-        word-break: break-word;
-    }
-
-    .bubble.me {
-        background: #111827;
-        color: white;
-        border-bottom-right-radius: 5px;
-    }
-
-    .bubble.other {
-        background: #fff;
-        color: #000;
-        border-bottom-left-radius: 5px;
-    }
-
-    .chat-time {
-        font-size: 11px;
-        opacity: 0.7;
-        margin-top: 4px;
-        text-align: right;
-    }
-
-    .chat-image {
-        max-width: 240px;
-        border-radius: 12px;
-        margin-top: 8px;
-        cursor: pointer;
-    }
-
-    /* ================= INPUT ================= */
-    .chat-input-area {
-        position: fixed;
-        bottom: 80px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 92%;
-        max-width: 700px;
-
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 25px;
-        padding: 10px 12px;
-
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        z-index: 999;
-    }
-
-    .chat-form {
-        display: flex;
-        gap: 8px;
-        align-items: flex-end;
-    }
-
-    .chat-textarea {
-        flex: 1;
-        border: none;
-        outline: none;
-        resize: none;
-        background: #f3f4f6;
-        border-radius: 18px;
-        padding: 10px 12px;
-        font-size: 14px;
-        max-height: 120px;
-        overflow-y: auto;
-    }
-
-    /* IMAGE BUTTON */
-    .image-upload-btn {
-        width: 42px;
-        height: 42px;
-        min-width: 42px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        background: #f1f1f1;
-        border-radius: 50%;
-
-        cursor: pointer;
-        font-size: 18px;
-    }
-
-    .send-btn {
-        border: none;
-        background: #111827;
-        color: white;
-        padding: 10px 16px;
-        border-radius: 20px;
-    }
-
-    .preview-image {
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-        border-radius: 10px;
-        display: none;
-        margin-bottom: 6px;
-    }
-</style>
-
-<div class="chat-page">
-
-    {{-- HEADER --}}
-    <div class="chat-header">
-        <a href="{{ route('chat.list') }}" class="back-btn">←</a>
-
-        <img src="{{ $otherUser->avatar ?? 'https://via.placeholder.com/100' }}">
-
-        <div>
-            <strong>{{ $otherUser->name }}</strong>
-            @isset($order)
-            <div style="font-size:12px;color:gray;">Order Chat</div>
-            @endisset
+            </a>
+            @empty
+            <div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;">
+                No conversations yet.
+            </div>
+            @endforelse
         </div>
     </div>
 
-    {{-- CHAT BOX --}}
-    <div class="chat-box" id="chatBox"></div>
+    {{-- ── THREAD PANEL ── --}}
+    <div class="chat-thread">
 
-    {{-- INPUT --}}
-    <div class="chat-input-area">
-
-        <form id="chatForm" action="{{ route('chat.send') }}" method="POST" enctype="multipart/form-data">
-            @csrf
-
-            <input type="hidden" name="order_id" value="{{ $order->order_id ?? '' }}">
-            <input type="hidden" name="receiver_id" value="{{ $otherUser->user_id }}">
-
-            <img id="preview" class="preview-image">
-
-            <div class="chat-form">
-
-                {{-- TEXT --}}
-                <textarea name="message"
-                    class="chat-textarea"
-                    placeholder="Message..."
-                    rows="1"></textarea>
-
-                {{-- IMAGE --}}
-                <label class="image-upload-btn">
-                    +
-                    <input type="file" name="image" id="imageInput" hidden>
-                </label>
-
-                {{-- SEND --}}
-                <button type="submit" class="send-btn">Send</button>
-
+        {{-- Header --}}
+        <div class="thread-head">
+            <div class="thread-user">
+                <img src="{{ $otherUser->avatar ?? asset('images/default-avatar.png') }}"
+                    class="thread-avatar" alt="{{ $otherUser->name ?? '' }}">
+                <div class="thread-user-info">
+                    <span class="thread-name">{{ $otherUser->name ?? 'Unknown' }}</span>
+                    <span class="thread-status">
+                        <span class="status-dot"></span> Online
+                    </span>
+                </div>
             </div>
+            <div class="thread-actions">
+                <div class="thread-action-btn" title="Call"><i class="bi bi-telephone"></i></div>
+                <div class="thread-action-btn" title="Video"><i class="bi bi-camera-video"></i></div>
+                <div class="thread-action-btn" title="Info"><i class="bi bi-info-circle"></i></div>
+            </div>
+        </div>
 
-        </form>
+        {{-- Order banner (hanya jika order chat) --}}
+        @if(isset($order))
+        <div class="thread-order-banner">
+            <i class="bi bi-box-seam"></i>
+            Order #{{ strtoupper(substr($order->order_id, 0, 8)) }}
+            &nbsp;·&nbsp;
+            {{ $order->service->title ?? 'Commission' }}
+        </div>
+        @endif
 
-    </div>
+        {{-- Messages --}}
+        <div class="thread-messages"
+            id="messages-area"
+            data-order-id="{{ $order->order_id ?? '' }}"
+            data-current-user-id="{{ Auth::user()->user_id }}">
 
-</div>
+            <div class="date-divider">Today</div>
 
-@include('layouts.botnav')
+            @foreach($chats as $chat)
+            <div class="bubble-row {{ $chat->isMine ? 'mine' : '' }}">
 
-<script>
-    const chatBox = document.getElementById('chatBox');
-    const form = document.getElementById('chatForm');
-    const textarea = document.querySelector('.chat-textarea');
-    const imageInput = document.getElementById('imageInput');
-    const preview = document.getElementById('preview');
+                @if(!$chat->isMine)
+                <img src="{{ $chat->sender->avatar ?? asset('images/default-avatar.png') }}"
+                    class="bubble-avatar" alt="">
+                @endif
 
-    /* ================= CHAT RENDER ================= */
-    function renderChat(data) {
+                <div class="bubble-wrap">
+                    @if($chat->image)
+                    <div class="bubble-img">
+                        <img src="{{ asset('storage/' . $chat->image) }}" alt="attachment">
+                    </div>
+                    @endif
 
-        chatBox.innerHTML = '';
+                    @if($chat->message)
+                    <div class="bubble">{{ $chat->message }}</div>
+                    @endif
 
-        data.forEach(chat => {
-
-            const isMe = chat.sender_id == "{{ auth()->user()->user_id }}";
-
-            chatBox.innerHTML += `
-        <div class="chat-row ${isMe ? 'me' : 'other'}">
-            <div class="bubble ${isMe ? 'me' : 'other'}">
-
-                ${chat.message ? `<div>${chat.message}</div>` : ''}
-
-                ${chat.image ? `<img src="/storage/${chat.image}" class="chat-image">` : ''}
-
-                <div class="chat-time">
-                    ${new Date(chat.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                    <div class="bubble-time">
+                        {{ $chat->created_at?->format('g:i A') ?? '' }}
+                        @if($chat->isMine)
+                        <i class="bi bi-check2-all read-check {{ $chat->is_read ? 'read' : '' }}"></i>
+                        @endif
+                    </div>
                 </div>
 
             </div>
-        </div>`;
-        });
+            @endforeach
 
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+        </div>
 
-    /* ================= FETCH CHAT ================= */
-    function loadChat() {
-        fetch("/chat/fetch?user_id={{ $otherUser->user_id }}")
-            .then(res => res.json())
-            .then(res => renderChat(res.data));
-    }
+        {{-- Input --}}
+        <div class="thread-input">
+            <form action="{{ route('chat.send') }}" method="POST"
+                enctype="multipart/form-data" id="chat-form">
+                @csrf
+                @if(isset($order))
+                <input type="hidden" name="order_id" value="{{ $order->order_id }}">
+                @endif
+                <input type="hidden" name="receiver_id" value="{{ $otherUser->user_id ?? '' }}">
+                <input type="file" name="image" id="image-input"
+                    style="display:none;" accept="image/*">
 
-    loadChat();
-    setInterval(loadChat, 2000);
+                <div class="input-row">
+                    <button type="button" class="input-attach"
+                        onclick="document.getElementById('image-input').click()">
+                        <i class="bi bi-plus-circle"></i>
+                    </button>
 
-    /* ================= ENTER TO SEND ================= */
-    textarea.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            form.submit();
-        }
-    });
+                    <textarea
+                        name="message"
+                        class="input-field"
+                        placeholder="Message {{ $otherUser->name ?? '...' }}"
+                        rows="1"
+                        id="message-input"
+                        onkeydown="handleEnter(event)"></textarea>
 
-    /* ================= AUTO RESIZE TEXTAREA ================= */
-    textarea.addEventListener('input', function() {
-        this.style.height = 'auto';
-        const max = 120;
+                    <div class="input-actions">
+                        <button type="button" class="input-icon-btn" title="Emoji">
+                            <i class="bi bi-emoji-smile"></i>
+                        </button>
+                        <button type="button" class="input-icon-btn"
+                            onclick="document.getElementById('image-input').click()"
+                            title="Image">
+                            <i class="bi bi-image"></i>
+                        </button>
+                        <button type="submit" class="input-send" title="Send">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
 
-        if (this.scrollHeight > max) {
-            this.style.height = max + 'px';
-            this.style.overflowY = 'auto';
-        } else {
-            this.style.height = this.scrollHeight + 'px';
-            this.style.overflowY = 'hidden';
-        }
-    });
+    </div>
+</div>
 
-    /* ================= IMAGE PREVIEW ================= */
-    imageInput.addEventListener('change', function() {
-        const file = this.files[0];
-        if (file) {
-            preview.src = URL.createObjectURL(file);
-            preview.style.display = 'block';
-        }
-    });
-</script>
+@vite('resources/js/pages/chat-thread.js')
 
 @endsection

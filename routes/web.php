@@ -1,133 +1,196 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 
-// Controllers
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\ArtworkController;
-use App\Http\Controllers\CommissionController;
-use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ArtistDashboardController;
 use App\Http\Controllers\UploadController;
-use App\Http\Controllers\EditController;
 use App\Http\Controllers\CommissionServiceController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\FollowController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\LikeController;
+use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\VerificationController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminVerificationController;
 
-// ===============================
-// HOME / HOMEPAGE
-// ===============================
+/* ===============================
+   HOME
+=============================== */
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// ===============================
-// EXPLORE / SEARCH PAGE
-// ===============================
+/* ===============================
+   EXPLORE
+=============================== */
 Route::get('/explore', [ExploreController::class, 'index'])->name('explore');
 
-// DETAIL ARTWORK (dari explore/home)
-Route::get('/artwork/{id}', [ArtworkController::class, 'show'])->name('artwork.detail');
-
-// ===============================
-// AUTH
-// ===============================
-Route::get('/auth', [AuthController::class, 'showAuthForm'])->name('auth.form');
+/* ===============================
+   AUTH
+=============================== */
+Route::get('/auth',           [AuthController::class, 'showAuthForm'])->name('auth.form');
+Route::get('/auth/login',     [AuthController::class, 'showAuthForm'])->name('login');
 Route::post('/auth/register', [AuthController::class, 'register'])->name('auth.register');
-Route::post('/auth/login', [AuthController::class, 'login'])->name('auth.login');
-Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
-Route::get('/auth/login', [AuthController::class, 'showAuthForm'])->name('login');
+Route::post('/auth/login',    [AuthController::class, 'login'])->name('auth.login');
+Route::post('/auth/logout',   [AuthController::class, 'logout'])->name('auth.logout');
 
+/* ===============================
+   ADMIN
+=============================== */
+Route::prefix('admin')->name('admin.')->group(function () {
 
-// ===============================
-// DASHBOARD PROFILE
-// ===============================
+    // Guest
+    Route::get('/login',   [AdminAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',  [AdminAuthController::class, 'login']);
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/profile/{id}', [ProfileController::class, 'show'])->name('profile.show');
+    // Protected
+    Route::middleware('auth.admin')->group(function () {
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+        // Verifikasi
+        Route::prefix('verifications')->name('verification.')->group(function () {
+            Route::get('/',                        [AdminVerificationController::class, 'index'])->name('index');
+            Route::get('/{verification}',          [AdminVerificationController::class, 'show'])->name('show');
+            Route::patch('/{verification}/take',   [AdminVerificationController::class, 'take'])->name('take');
+            Route::patch('/{verification}/decide', [AdminVerificationController::class, 'decide'])->name('decide');
+        });
+    });
+});
+/* ===============================
+   VERIFIKASI PORTFOLIO ARTIST
+   Nama route yang dihasilkan:
+     verification.store   → POST /verification/store
+     verification.create  → GET  /verification/create
+     verification.status  → GET  /verification/status
+=============================== */
+Route::middleware('auth')->prefix('verification')->name('verification.')->group(function () {
+    Route::post('/store',  [VerificationController::class, 'store'])->name('store');
+    Route::get('/create',  [VerificationController::class, 'create'])->name('create');
+    Route::get('/status',  [VerificationController::class, 'status'])->name('status');
+});
+
+/* ===============================
+   ARTWORK
+=============================== */
+Route::get('/artwork/{id}',    [ArtworkController::class, 'show'])->name('artwork.detail');
+Route::post('/artwork/update', [ArtworkController::class, 'updateFromModal'])->name('artwork.update');
+Route::post('/artwork/delete', [ArtworkController::class, 'destroyFromModal'])->name('artwork.delete');
+
+/* ===============================
+   PROFILE & DASHBOARD
+=============================== */
+Route::middleware('auth')->group(function () {
+    Route::get('/profile/{id}',        [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile/{id}/update', [ProfileController::class, 'update'])->name('profile.update-popup');
 });
+
 Route::get('/dashboard', [ArtistDashboardController::class, 'index'])
     ->name('artist.dashboard')
     ->middleware('auth');
 
+/* ===============================
+   FOLLOW
+=============================== */
 Route::post('/follow/{id}', [FollowController::class, 'toggle'])
     ->middleware('auth')
     ->name('follow.toggle');
 
-// ===============================
-// COMMISSION
-// ===============================
-Route::get('/upload', [UploadController::class, 'popup'])->name('upload.popup');
-Route::post('/upload-artwork', [UploadController::class, 'uploadArtwork'])->name('upload.artwork');
-Route::post('/artwork/update', [ArtworkController::class, 'updateFromModal'])->name('artwork.update');
-Route::post('/artwork/delete', [ArtworkController::class, 'destroyFromModal'])->name('artwork.delete');
-// API: create a commission/order from client to artist
-Route::post('/commission', [CommissionController::class, 'store'])->name('commission.store')->middleware('auth');
+/* ===============================
+   UPLOAD
+=============================== */
+Route::get('/upload',             [UploadController::class, 'popup'])->name('upload.popup');
+Route::post('/upload-artwork',    [UploadController::class, 'uploadArtwork'])->name('upload.artwork');
 Route::post('/upload-commission', [UploadController::class, 'uploadCommission'])->name('upload.commission');
-Route::get('/commission/{id}', [CommissionServiceController::class, 'detail'])
-    ->name('commission.detail');
-Route::get('/commission/{id}', [CommissionServiceController::class, 'show'])
-    ->name('commission.show');
-Route::put(
-    '/commission/{id}',
-    [CommissionServiceController::class, 'update']
-)
-    ->name('commission.update');
-Route::delete('/commission/{id}', [CommissionServiceController::class, 'destroy'])
-    ->name('commission.delete');
-Route::post('/order', [OrderController::class, 'store'])
-    ->name('order.store');
-Route::post('/order/pay', [OrderController::class, 'pay'])->name('order.pay');
-// ===============================
-// CART
-// ===============================
-Route::get('/cart', [OrderController::class, 'cart'])
-    ->middleware('auth')
-    ->name('cart.index');
-Route::post('/order/accept', [OrderController::class, 'accept'])->name('order.accept');
-Route::post('/order/reject', [OrderController::class, 'reject'])->name('order.reject');
-Route::post('/order/revision', [OrderController::class, 'revision'])
-    ->name('order.revision');
-Route::post('/order/complete', [OrderController::class, 'complete'])->name('order.complete');
 
+/* ===============================
+   COMMISSION SERVICE
+=============================== */
+Route::get('/commission/{id}',    [CommissionServiceController::class, 'show'])->name('commission.show');
+Route::put('/commission/{id}',    [CommissionServiceController::class, 'update'])->name('commission.update');
+Route::delete('/commission/{id}', [CommissionServiceController::class, 'destroy'])->name('commission.delete');
+
+/* ===============================
+   ORDER
+=============================== */
 Route::middleware('auth')->group(function () {
-
-    Route::get('/chat', [ChatController::class, 'list'])->name('chat.list');
-
-    Route::get('/chat/thread', [ChatController::class, 'index'])->name('chat.index');
-
-    Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
-
-    Route::get('/chat/fetch', [ChatController::class, 'fetch'])->name('chat.fetch');
+    Route::post('/order',                      [OrderController::class, 'store'])->name('order.store');
+    Route::get('/order/{orderId}',             [OrderController::class, 'detail'])->name('order.detail');
+    Route::patch('/order/{orderId}/brief',     [OrderController::class, 'updateBrief'])->name('order.updateBrief');
+    Route::get('/cart',                        [OrderController::class, 'cart'])->name('cart.index');
+    Route::post('/order/accept',               [OrderController::class, 'accept'])->name('order.accept');
+    Route::post('/order/reject',               [OrderController::class, 'reject'])->name('order.reject');
+    Route::post('/order/send',                 [OrderController::class, 'sendResult'])->name('order.send');
+    Route::post('/order/revision',             [OrderController::class, 'revision'])->name('order.revision');
+    Route::post('/order/complete',             [OrderController::class, 'complete'])->name('order.complete');
+    Route::post('/order/client-cancel',        [OrderController::class, 'clientCancel'])->name('order.clientCancel');
+    Route::post('/order/request-refund',       [OrderController::class, 'requestRefund'])->name('order.requestRefund');
+    Route::post('/order/request-extension',    [OrderController::class, 'requestExtension'])->name('order.requestExtension');
+    Route::post('/order/respond-extension',    [OrderController::class, 'respondExtension'])->name('order.respondExtension');
 });
 
-Route::get('/notifications', function () {
-    return view('pages.notifications');
-})->name('notifications')->middleware('auth');
+/* ===============================
+   PAYMENT — Midtrans
+=============================== */
+Route::middleware('auth')->group(function () {
+    Route::post('/payment/checkout',       [PaymentController::class, 'checkout'])->name('payment.checkout');
+    Route::post('/payment/verify',         [PaymentController::class, 'verify'])->name('payment.verify');
+    Route::get('/payment/success',         [PaymentController::class, 'success'])->name('payment.success');
+    Route::get('/payment/unfinish',        [PaymentController::class, 'unfinish'])->name('payment.unfinish');
+    Route::get('/payment/error',           [PaymentController::class, 'error'])->name('payment.error');
+    Route::get('/payment/finish',          [PaymentController::class, 'finish'])->name('payment.finish');
+    Route::post('/payment/verify-status',  [PaymentController::class, 'verifyStatus'])->name('payment.verifyStatus');
+});
 
-Route::get('/commission/cart', function () {
-    $hideBottomNavbar = true;
-    return view('pages.commission_cart');
-})->name('commission.cart')->middleware('auth');
+// Webhook — tanpa auth & CSRF (exclude di bootstrap/app.php)
+Route::post('/payment/notification', [PaymentController::class, 'notification'])
+    ->name('payment.notification');
 
-Route::get('/service/{id}', function ($id) {
-    return view('pages.commission_service', ['id' => $id]);
-})->name('service.detail');
+/* ===============================
+   CHAT
+=============================== */
+Route::middleware('auth')->group(function () {
+    Route::get('/chat',                    [ChatController::class, 'list'])->name('chat.list');
+    Route::get('/chat/thread',             [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat/send',              [ChatController::class, 'send'])->name('chat.send');
+    Route::get('/chat/fetch',              [ChatController::class, 'fetch'])->name('chat.fetch');
+    Route::get('/chat/active-channels',    [ChatController::class, 'activeChannels']);
+    Route::get('/chat/unread-count',       [ChatController::class, 'unreadCount']);
+});
 
-Route::get('/orders', function () {
-    return view('pages.client_orders');
-})->name('client.orders')->middleware('auth');
+/* ===============================
+   LIKES
+=============================== */
+Route::middleware('auth')->group(function () {
+    Route::post('/like', [LikeController::class, 'toggle'])->name('like.toggle');
+});
 
-Route::get('/profile/{id}/reviews', function ($id) {
-    return view('pages.artist_reviews', ['id' => $id]);
-})->name('artist.reviews')->middleware('auth');
+/* ===============================
+   REVIEWS
+=============================== */
+Route::middleware('auth')->group(function () {
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('review.store');
+});
 
+/* ===============================
+   NOTIFICATIONS
+=============================== */
+Route::middleware('auth')->group(function () {
+    Route::get('/notifications',                  [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all',        [NotificationController::class, 'markAllRead'])->name('notifications.readAll');
+    Route::post('/notifications/{notifId}/read',  [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::get('/notifications/count',            [NotificationController::class, 'unreadCount'])->name('notifications.count');
+});
 
-// ===============================
-// FALLBACK
-// ===============================
+/* ===============================
+   FALLBACK
+=============================== */
 Route::fallback(fn() => redirect()->route('home'));

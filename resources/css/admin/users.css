@@ -1,0 +1,73 @@
+/* resources/css/pages/admin/users.css */
+
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-input {
+    padding: 7px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    outline: none;
+    width: 220px;
+    transition: border-color .2s;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--muted); }
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface2);
+    flex-shrink: 0;
+}
+
+.user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.user-email {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 1px;
+}
+
+.pagination-wrap {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+}
+
+.pagination-wrap nav span,
+.pagination-wrap nav a {
+    background: var(--surface2) !important;
+    border-color: var(--border) !important;
+    color: var(--muted) !important;
+    font-size: 12px;
+}
+.pagination-wrap nav a:hover {
+    background: var(--surface3) !important;
+    color: var(--text) !important;
+}
+.pagination-wrap [aria-current="page"] span {
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+    color: #fff !important;
+}
