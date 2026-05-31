@@ -32,9 +32,12 @@ class AdminHomeSettingController extends Controller
 
         // Simpan field teks — cast ke string agar tidak null
         $textKeys = [
-            'hero_title', 'hero_subtitle',
-            'banner1_title', 'banner1_subtitle',
-            'banner2_title', 'banner2_subtitle',
+            'hero_title',
+            'hero_subtitle',
+            'banner1_title',
+            'banner1_subtitle',
+            'banner2_title',
+            'banner2_subtitle',
         ];
         foreach ($textKeys as $key) {
             HomeSetting::set($key, (string) ($request->input($key) ?? ''));
@@ -50,7 +53,8 @@ class AdminHomeSettingController extends Controller
                 if ($oldPublicId) {
                     try {
                         cloudinary()->destroy($oldPublicId);
-                    } catch (\Throwable) {}
+                    } catch (\Throwable) {
+                    }
                 }
 
                 // Upload ke Cloudinary — compatible dengan cloudinary-labs v3
@@ -62,7 +66,6 @@ class AdminHomeSettingController extends Controller
 
                     HomeSetting::set($key, (string) ($uploaded['secure_url'] ?? ''));
                     HomeSetting::set("{$key}_public_id", (string) ($uploaded['public_id'] ?? ''));
-
                 } catch (\Throwable $e) {
                     // Fallback: coba pakai upload() biasa
                     try {
@@ -95,7 +98,6 @@ class AdminHomeSettingController extends Controller
                             HomeSetting::set($key, (string) $secureUrl);
                             HomeSetting::set("{$key}_public_id", (string) ($publicId ?? ''));
                         }
-
                     } catch (\Throwable) {
                         // Gagal upload — lanjut tanpa ubah gambar
                     }
@@ -118,7 +120,8 @@ class AdminHomeSettingController extends Controller
         if ($publicId) {
             try {
                 cloudinary()->destroy($publicId);
-            } catch (\Throwable) {}
+            } catch (\Throwable) {
+            }
         }
 
         HomeSetting::set($key, '');
