@@ -21,7 +21,8 @@
     </div>
     @endif
 
-    <form action="{{ route('admin.home-setting.update') }}" method="POST" id="hsForm">
+    <form action="{{ route('admin.home-setting.update') }}" method="POST"
+        enctype="multipart/form-data" id="hsForm">
         @csrf @method('PATCH')
 
         {{-- ── HERO ── --}}
@@ -35,9 +36,7 @@
                 <input type="text" name="hero_title" class="hs-input"
                     value="{{ old('hero_title', $settings['hero_title'] ?? '') }}"
                     placeholder="For the love of human creativity" required>
-                @error('hero_title')
-                <div class="hs-error">{{ $message }}</div>
-                @enderror
+                @error('hero_title')<div class="hs-error">{{ $message }}</div>@enderror
             </div>
 
             <div class="hs-field">
@@ -45,9 +44,37 @@
                 <textarea name="hero_subtitle" class="hs-textarea"
                     placeholder="Deskripsi singkat di bawah judul...">{{ old('hero_subtitle', $settings['hero_subtitle'] ?? '') }}</textarea>
             </div>
+
+            <div class="hs-field">
+                <label class="hs-label">Gambar Background Hero <span>(opsional)</span></label>
+                @if(!empty($settings['hero_image']))
+                <div class="hs-current-img">
+                    <img src="{{ $settings['hero_image'] }}" alt="Hero background">
+                    <div class="hs-current-img-label">Gambar aktif</div>
+                    <form action="{{ route('admin.home-setting.remove-image') }}"
+                        method="POST" class="hs-remove-form">
+                        @csrf @method('DELETE')
+                        <input type="hidden" name="key" value="hero_image">
+                        <button type="submit" class="hs-btn-remove"
+                            onclick="return confirm('Hapus gambar hero?')">
+                            <i class="bi bi-trash"></i> Hapus Gambar
+                        </button>
+                    </form>
+                </div>
+                @endif
+                <div class="hs-upload-zone" id="hero_zone">
+                    <input type="file" name="hero_image" accept="image/*"
+                        onchange="previewZone(this,'hero_zone','hero_preview')">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <span>{{ !empty($settings['hero_image']) ? 'Ganti gambar' : 'Klik atau drag gambar' }}</span>
+                    <span class="hs-upload-hint">JPG, PNG, WEBP — maks 5MB</span>
+                </div>
+                <img id="hero_preview" class="hs-new-preview" src="" alt="" style="display:none;">
+                @error('hero_image')<div class="hs-error">{{ $message }}</div>@enderror
+            </div>
         </div>
 
-        {{-- ── BANNER 1 ── --}}
+        {{-- ── BANNER KIRI ── --}}
         <div class="hs-card">
             <div class="hs-card-head">
                 <i class="bi bi-card-image"></i> Banner Kiri
@@ -59,9 +86,7 @@
                     value="{{ old('banner1_title', $settings['banner1_title'] ?? '') }}"
                     placeholder="Made for creators" required
                     data-preview="b1title">
-                @error('banner1_title')
-                <div class="hs-error">{{ $message }}</div>
-                @enderror
+                @error('banner1_title')<div class="hs-error">{{ $message }}</div>@enderror
             </div>
 
             <div class="hs-field">
@@ -72,30 +97,42 @@
             </div>
 
             <div class="hs-field">
-                <label class="hs-label">Warna Latar</label>
-                <div class="hs-color-row">
-                    <input type="text" name="banner1_color" id="banner1_color_text" class="hs-input"
-                        value="{{ old('banner1_color', $settings['banner1_color'] ?? '#1a1a2e') }}"
-                        placeholder="#1a1a2e"
-                        data-color="banner1">
-                    <div class="hs-color-preview" id="banner1_preview_box"
-                        style="background:{{ old('banner1_color', $settings['banner1_color'] ?? '#1a1a2e') }}"
-                        data-picker="banner1_color_picker">
-                    </div>
-                    <input type="color" id="banner1_color_picker"
-                        value="{{ old('banner1_color', $settings['banner1_color'] ?? '#1a1a2e') }}"
-                        data-color="banner1">
+                <label class="hs-label">Gambar Background Banner Kiri</label>
+                @if(!empty($settings['banner1_image']))
+                <div class="hs-current-img">
+                    <img src="{{ $settings['banner1_image'] }}" alt="Banner 1">
+                    <div class="hs-current-img-label">Gambar aktif</div>
+                    <form action="{{ route('admin.home-setting.remove-image') }}"
+                        method="POST" class="hs-remove-form">
+                        @csrf @method('DELETE')
+                        <input type="hidden" name="key" value="banner1_image">
+                        <button type="submit" class="hs-btn-remove"
+                            onclick="return confirm('Hapus gambar banner kiri?')">
+                            <i class="bi bi-trash"></i> Hapus Gambar
+                        </button>
+                    </form>
                 </div>
+                @endif
+                <div class="hs-upload-zone" id="banner1_zone">
+                    <input type="file" name="banner1_image" accept="image/*"
+                        onchange="previewZone(this,'banner1_zone','banner1_preview')">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <span>{{ !empty($settings['banner1_image']) ? 'Ganti gambar' : 'Klik atau drag gambar' }}</span>
+                    <span class="hs-upload-hint">JPG, PNG, WEBP — maks 5MB</span>
+                </div>
+                <img id="banner1_preview" class="hs-new-preview" src="" alt="" style="display:none;">
+                @error('banner1_image')<div class="hs-error">{{ $message }}</div>@enderror
             </div>
 
+            {{-- Live preview teks --}}
             <div class="hs-preview" id="banner1_card"
-                style="background:{{ old('banner1_color', $settings['banner1_color'] ?? '#1a1a2e') }}">
+                style="{{ !empty($settings['banner1_image']) ? 'background-image:url('.$settings['banner1_image'].');background-size:cover;background-position:center;' : 'background:#1a1a2e;' }}">
                 <div class="hs-preview-title" id="b1title">{{ old('banner1_title', $settings['banner1_title'] ?? 'Made for creators') }}</div>
                 <div class="hs-preview-sub" id="b1sub">{{ old('banner1_subtitle', $settings['banner1_subtitle'] ?? '') }}</div>
             </div>
         </div>
 
-        {{-- ── BANNER 2 ── --}}
+        {{-- ── BANNER KANAN ── --}}
         <div class="hs-card">
             <div class="hs-card-head">
                 <i class="bi bi-card-image"></i> Banner Kanan
@@ -107,9 +144,7 @@
                     value="{{ old('banner2_title', $settings['banner2_title'] ?? '') }}"
                     placeholder="No Generative AI" required
                     data-preview="b2title">
-                @error('banner2_title')
-                <div class="hs-error">{{ $message }}</div>
-                @enderror
+                @error('banner2_title')<div class="hs-error">{{ $message }}</div>@enderror
             </div>
 
             <div class="hs-field">
@@ -120,24 +155,36 @@
             </div>
 
             <div class="hs-field">
-                <label class="hs-label">Warna Latar</label>
-                <div class="hs-color-row">
-                    <input type="text" name="banner2_color" id="banner2_color_text" class="hs-input"
-                        value="{{ old('banner2_color', $settings['banner2_color'] ?? '#0d2818') }}"
-                        placeholder="#0d2818"
-                        data-color="banner2">
-                    <div class="hs-color-preview" id="banner2_preview_box"
-                        style="background:{{ old('banner2_color', $settings['banner2_color'] ?? '#0d2818') }}"
-                        data-picker="banner2_color_picker">
-                    </div>
-                    <input type="color" id="banner2_color_picker"
-                        value="{{ old('banner2_color', $settings['banner2_color'] ?? '#0d2818') }}"
-                        data-color="banner2">
+                <label class="hs-label">Gambar Background Banner Kanan</label>
+                @if(!empty($settings['banner2_image']))
+                <div class="hs-current-img">
+                    <img src="{{ $settings['banner2_image'] }}" alt="Banner 2">
+                    <div class="hs-current-img-label">Gambar aktif</div>
+                    <form action="{{ route('admin.home-setting.remove-image') }}"
+                        method="POST" class="hs-remove-form">
+                        @csrf @method('DELETE')
+                        <input type="hidden" name="key" value="banner2_image">
+                        <button type="submit" class="hs-btn-remove"
+                            onclick="return confirm('Hapus gambar banner kanan?')">
+                            <i class="bi bi-trash"></i> Hapus Gambar
+                        </button>
+                    </form>
                 </div>
+                @endif
+                <div class="hs-upload-zone" id="banner2_zone">
+                    <input type="file" name="banner2_image" accept="image/*"
+                        onchange="previewZone(this,'banner2_zone','banner2_preview')">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <span>{{ !empty($settings['banner2_image']) ? 'Ganti gambar' : 'Klik atau drag gambar' }}</span>
+                    <span class="hs-upload-hint">JPG, PNG, WEBP — maks 5MB</span>
+                </div>
+                <img id="banner2_preview" class="hs-new-preview" src="" alt="" style="display:none;">
+                @error('banner2_image')<div class="hs-error">{{ $message }}</div>@enderror
             </div>
 
+            {{-- Live preview teks --}}
             <div class="hs-preview" id="banner2_card"
-                style="background:{{ old('banner2_color', $settings['banner2_color'] ?? '#0d2818') }}">
+                style="{{ !empty($settings['banner2_image']) ? 'background-image:url('.$settings['banner2_image'].');background-size:cover;background-position:center;' : 'background:#0d2818;' }}">
                 <div class="hs-preview-title" id="b2title">{{ old('banner2_title', $settings['banner2_title'] ?? 'No Generative AI') }}</div>
                 <div class="hs-preview-sub" id="b2sub">{{ old('banner2_subtitle', $settings['banner2_subtitle'] ?? '') }}</div>
             </div>

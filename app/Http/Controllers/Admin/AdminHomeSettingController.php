@@ -19,24 +19,25 @@ class AdminHomeSettingController extends Controller
         $request->validate([
             'hero_title'       => 'required|string|max:200',
             'hero_subtitle'    => 'nullable|string|max:300',
-            'hero_image'       => 'nullable|image|max:5120',
+            'hero_image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
 
             'banner1_title'    => 'required|string|max:100',
             'banner1_subtitle' => 'nullable|string|max:300',
-            'banner1_color'    => 'required|string|max:20',
-            'banner1_image'    => 'nullable|image|max:5120',
+            'banner1_image'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
 
             'banner2_title'    => 'required|string|max:100',
             'banner2_subtitle' => 'nullable|string|max:300',
-            'banner2_color'    => 'required|string|max:20',
-            'banner2_image'    => 'nullable|image|max:5120',
+            'banner2_image'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
         // Simpan field teks
         $textKeys = [
-            'hero_title', 'hero_subtitle',
-            'banner1_title', 'banner1_subtitle', 'banner1_color',
-            'banner2_title', 'banner2_subtitle', 'banner2_color',
+            'hero_title',
+            'hero_subtitle',
+            'banner1_title',
+            'banner1_subtitle',
+            'banner2_title',
+            'banner2_subtitle',
         ];
         foreach ($textKeys as $key) {
             HomeSetting::set($key, $request->input($key, ''));
@@ -52,17 +53,16 @@ class AdminHomeSettingController extends Controller
                     try {
                         cloudinary()->destroy($oldPublicId);
                     } catch (\Throwable) {
-                        // Lanjut meski gagal hapus
                     }
                 }
 
-                // Upload ke Cloudinary folder home-settings
+                // Upload ke Cloudinary
                 $result = cloudinary()->upload(
                     $request->file($key)->getRealPath(),
                     [
                         'folder'         => 'aneris/home-settings',
                         'transformation' => [
-                            'quality' => 'auto',
+                            'quality'      => 'auto',
                             'fetch_format' => 'auto',
                         ],
                     ]
@@ -88,7 +88,8 @@ class AdminHomeSettingController extends Controller
         if ($publicId) {
             try {
                 cloudinary()->destroy($publicId);
-            } catch (\Throwable) {}
+            } catch (\Throwable) {
+            }
         }
 
         HomeSetting::set($key, '');
