@@ -55,7 +55,6 @@
                 <th>Artist</th>
                 <th>File</th>
                 <th>Sosmed</th>
-                <th>Skor AI</th>
                 <th>Status</th>
                 <th>Dikirim</th>
                 <th>Direview</th>
@@ -64,10 +63,6 @@
         </thead>
         <tbody>
             @forelse($verifications as $v)
-            @php
-            $sc = $v->ai_score_reference;
-            $cls = $sc !== null ? ($sc >= 60 ? 'high' : ($sc >= 35 ? 'medium' : 'low')) : '';
-            @endphp
             <tr onclick="window.location='{{ route('admin.verification.show', $v->id) }}'"
                 class="verif-row">
                 <td class="col-id">{{ $v->id }}</td>
@@ -82,18 +77,6 @@
                 <td class="col-meta">
                     <i class="bi bi-link-45deg"></i>
                     {{ count($v->social_media_links ?? []) }} link
-                </td>
-                <td>
-                    @if($sc !== null)
-                    <div class="score-bar-wrap">
-                        <div class="score-bar">
-                            <div class="score-bar-fill {{ $cls }}" style="width:{{ $sc }}%"></div>
-                        </div>
-                        <span class="score-num {{ $cls }}">{{ $sc }}</span>
-                    </div>
-                    @else
-                    <span class="col-empty">—</span>
-                    @endif
                 </td>
                 <td>
                     <span class="badge badge-{{ $v->status }}">

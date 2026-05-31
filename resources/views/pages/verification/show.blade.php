@@ -5,15 +5,6 @@
 @section('content')
 @vite('resources/css/pages/verification/show.css')
 
-{{-- Data skor untuk JS via data attributes --}}
-<div id="score-meta" style="display:none;"
-    data-score-social-style="{{ $verification->score_social_style ?? 0 }}"
-    data-score-social-age="{{ $verification->score_social_age ?? 0 }}"
-    data-score-social-wip="{{ $verification->score_social_wip ?? 0 }}"
-    data-score-social-comments="{{ $verification->score_social_comments ?? 0 }}"
-    data-score-portfolio="{{ $verification->score_portfolio ?? 0 }}">
-</div>
-
 {{-- Breadcrumb --}}
 <div class="breadcrumb">
     <a href="{{ route('admin.dashboard') }}">Dashboard</a>
@@ -200,69 +191,6 @@
                 </div>
             </div>
         </div>
-
-        {{-- AI Pre-screening --}}
-        @if($verification->ai_score_reference !== null)
-        <div class="detail-card">
-            <div class="detail-card-head">
-                <i class="bi bi-robot"></i>
-                AI Pre-screening
-                <span class="card-head-meta">Referensi saja — keputusan ada pada admin</span>
-            </div>
-            <div class="detail-card-body">
-                @php
-                $breakdown = $verification->ai_breakdown ?? [];
-                $labels = [
-                'file_count' => ['label' => 'Jumlah file', 'max' => 25],
-                'resolution' => ['label' => 'Resolusi gambar', 'max' => 30],
-                'wip' => ['label' => 'Indikasi WIP di nama', 'max' => 20],
-                'file_size' => ['label' => 'Ukuran file', 'max' => 25],
-                'social' => ['label' => 'Sosial media (manual)', 'max' => 0],
-                ];
-                @endphp
-
-                <div class="ai-total-row">
-                    @php
-                    $sc = $verification->ai_score_reference;
-                    $cls = $sc >= 60 ? 'high' : ($sc >= 35 ? 'medium' : 'low');
-                    @endphp
-                    <span>Total skor AI</span>
-                    <span class="ai-total-score {{ $cls }}">{{ $sc }}/100</span>
-                </div>
-
-                @foreach($labels as $key => $meta)
-                @if($meta['max'] === 0) @continue @endif
-                @php
-                $item = $breakdown[$key] ?? null;
-                $score = $item['score'] ?? 0;
-                $max = $meta['max'];
-                $note = $item['note'] ?? null;
-                $pct = $max > 0 ? round(($score / $max) * 100) : 0;
-                $cls2 = $pct >= 60 ? 'high' : ($pct >= 35 ? 'medium' : 'low');
-                @endphp
-                <div class="ai-breakdown-row">
-                    <span class="ai-breakdown-label">{{ $meta['label'] }}</span>
-                    <div class="ai-breakdown-bar">
-                        <div class="score-bar">
-                            <div class="score-bar-fill {{ $cls2 }}" style="width:{{ $pct }}%"></div>
-                        </div>
-                        @if($note)
-                        <div class="ai-breakdown-note">{{ $note }}</div>
-                        @endif
-                    </div>
-                    <span class="ai-breakdown-score">{{ $score }}/{{ $max }}</span>
-                </div>
-                @endforeach
-
-                @if($verification->ai_score_notes)
-                <div class="ai-notes-box">
-                    <i class="bi bi-info-circle"></i>
-                    {!! nl2br(e($verification->ai_score_notes)) !!}
-                </div>
-                @endif
-            </div>
-        </div>
-        @endif
 
     </div>{{-- /col-left --}}
 

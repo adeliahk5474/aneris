@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Models\PortfolioVerification;
-use App\Services\PortfolioAnalyzer;
 use App\Services\CloudinaryService;
 
 class VerificationController extends Controller
@@ -100,21 +99,6 @@ class VerificationController extends Controller
             $request->input('social_media_links', []),
             fn($l) => !empty(trim($l ?? ''))
         ));
-
-        // ── AI Pre-screening ──
-        $analyzer = new PortfolioAnalyzer();
-        $result   = $analyzer->analyze($request->file('portfolio_files'));
-
-        // ── Simpan ──
-        PortfolioVerification::create([
-            'artist_id'          => $user->user_id,
-            'status'             => 'pending',
-            'portfolio_files'    => $filePaths,
-            'social_media_links' => $socialLinks,
-            'ai_score_reference' => $result['score'],
-            'ai_score_notes'     => $result['notes'],
-            'ai_breakdown'       => $result['breakdown'],
-        ]);
 
         // Kalau request dari fetch/AJAX, return JSON redirect URL
         if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {

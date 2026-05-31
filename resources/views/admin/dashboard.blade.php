@@ -59,7 +59,6 @@
             <tr>
                 <th>Artist</th>
                 <th>Dikirim</th>
-                <th>Skor AI</th>
                 <th>Status</th>
                 <th></th>
             </tr>
@@ -73,19 +72,6 @@
                 </td>
                 <td style="color:var(--muted); font-size:12px;">
                     {{ $v->created_at->diffForHumans() }}
-                </td>
-                <td>
-                    @if($v->ai_score_reference !== null)
-                    @php $sc = $v->ai_score_reference; $cls = $sc >= 60 ? 'high' : ($sc >= 35 ? 'medium' : 'low'); @endphp
-                    <div class="score-bar-wrap">
-                        <div class="score-bar">
-                            <div class="score-bar-fill {{ $cls }}" style="width:{{ $sc }}%"></div>
-                        </div>
-                        <span class="score-num {{ $cls }}">{{ $sc }}</span>
-                    </div>
-                    @else
-                    <span style="color:var(--muted); font-size:11px;">—</span>
-                    @endif
                 </td>
                 <td>
                     <span class="badge badge-{{ $v->status }}">
