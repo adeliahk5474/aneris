@@ -30,46 +30,76 @@ class AdminHomeSettingController extends Controller
             'banner2_image'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
-        // Simpan field teks
+        // Simpan field teks — cast ke string agar tidak null
         $textKeys = [
-            'hero_title',
-            'hero_subtitle',
-            'banner1_title',
-            'banner1_subtitle',
-            'banner2_title',
-            'banner2_subtitle',
+            'hero_title', 'hero_subtitle',
+            'banner1_title', 'banner1_subtitle',
+            'banner2_title', 'banner2_subtitle',
         ];
         foreach ($textKeys as $key) {
-            HomeSetting::set($key, $request->input($key, ''));
+            HomeSetting::set($key, (string) ($request->input($key) ?? ''));
         }
 
         // Upload gambar ke Cloudinary
         $imageKeys = ['hero_image', 'banner1_image', 'banner2_image'];
         foreach ($imageKeys as $key) {
             if ($request->hasFile($key) && $request->file($key)->isValid()) {
+
                 // Hapus gambar lama dari Cloudinary jika ada
                 $oldPublicId = HomeSetting::get("{$key}_public_id");
                 if ($oldPublicId) {
                     try {
                         cloudinary()->destroy($oldPublicId);
-                    } catch (\Throwable) {
-                    }
+                    } catch (\Throwable) {}
                 }
 
-                // Upload ke Cloudinary
-                $result = cloudinary()->upload(
-                    $request->file($key)->getRealPath(),
-                    [
-                        'folder'         => 'aneris/home-settings',
-                        'transformation' => [
-                            'quality'      => 'auto',
-                            'fetch_format' => 'auto',
-                        ],
-                    ]
-                );
+                // Upload ke Cloudinary — compatible dengan cloudinary-labs v3
+                try {
+                    $uploaded = cloudinary()->uploadFile(
+                        $request->file($key)->getRealPath(),
+                        ['folder' => 'aneris/home-settings']
+                    )->getResponse();
 
-                HomeSetting::set($key, $result->getSecurePath());
-                HomeSetting::set("{$key}_public_id", $result->getPublicId());
+                    HomeSetting::set($key, (string) ($uploaded['secure_url'] ?? ''));
+                    HomeSetting::set("{$key}_public_id", (string) ($uploaded['public_id'] ?? ''));
+
+                } catch (\Throwable $e) {
+                    // Fallback: coba pakai upload() biasa
+                    try {
+                        $result = cloudinary()->upload(
+                            $request->file($key)->getRealPath(),
+                            ['folder' => 'aneris/home-settings']
+                        );
+
+                        $secureUrl = null;
+                        $publicId  = null;
+
+                        // Handle berbagai return type Cloudinary
+                        if (is_array($result)) {
+                            $secureUrl = $result['secure_url'] ?? null;
+                            $publicId  = $result['public_id'] ?? null;
+                        } elseif (is_object($result)) {
+                            if (method_exists($result, 'getSecurePath')) {
+                                $secureUrl = $result->getSecurePath();
+                            } elseif (method_exists($result, 'getResponse')) {
+                                $resp      = $result->getResponse();
+                                $secureUrl = $resp['secure_url'] ?? null;
+                                $publicId  = $resp['public_id'] ?? null;
+                            }
+                            if (method_exists($result, 'getPublicId')) {
+                                $publicId = $result->getPublicId();
+                            }
+                        }
+
+                        if ($secureUrl) {
+                            HomeSetting::set($key, (string) $secureUrl);
+                            HomeSetting::set("{$key}_public_id", (string) ($publicId ?? ''));
+                        }
+
+                    } catch (\Throwable) {
+                        // Gagal upload — lanjut tanpa ubah gambar
+                    }
+                }
             }
         }
 
@@ -88,8 +118,7 @@ class AdminHomeSettingController extends Controller
         if ($publicId) {
             try {
                 cloudinary()->destroy($publicId);
-            } catch (\Throwable) {
-            }
+            } catch (\Throwable) {}
         }
 
         HomeSetting::set($key, '');
