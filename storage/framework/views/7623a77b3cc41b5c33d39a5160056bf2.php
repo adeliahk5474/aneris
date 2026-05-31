@@ -7,6 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title><?php echo $__env->yieldContent('title', 'Aneris'); ?></title>
+
+    
+    <link rel="icon" type="image/png" href="<?php echo e(asset('favicon.png')); ?>">
+    <link rel="apple-touch-icon" href="<?php echo e(asset('favicon.png')); ?>">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="<?php echo e(asset('css/app.css')); ?>">
     <?php echo app('Illuminate\Foundation\Vite')('resources/css/layouts/app.css'); ?>
@@ -149,7 +154,6 @@
         </div>
     </div>
 
-    
     <meta name="auth-user-id" content="<?php echo e(Auth::user()->user_id); ?>">
     <?php endif; ?>
 

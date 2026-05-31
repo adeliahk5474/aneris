@@ -1,13 +1,23 @@
-
-
 <?php $__env->startSection('title', 'Aneris — For the love of human creativity'); ?>
 <?php $__env->startSection('content'); ?>
 
 <?php echo app('Illuminate\Foundation\Vite')('resources/css/homepage/home.css'); ?>
 
+<?php
+$hs = \App\Models\HomeSetting::getAllKeyed();
+?>
 
-<div class="home-hero">
-    <h1>For the love of human creativity</h1>
+
+<?php
+$heroStyle = !empty($hs['hero_image'])
+? 'background-image:url(' . e($hs['hero_image']) . ');background-size:cover;background-position:center;'
+: '';
+?>
+<div class="home-hero" style="<?php echo e($heroStyle); ?>">
+    <h1><?php echo e($hs['hero_title'] ?? 'For the love of human creativity'); ?></h1>
+    <?php if(!empty($hs['hero_subtitle'])): ?>
+    <p class="hero-subtitle"><?php echo e($hs['hero_subtitle']); ?></p>
+    <?php endif; ?>
     <form action="<?php echo e(route('explore')); ?>" method="GET">
         <div class="hero-search-wrap">
             <span class="hero-search-icon"><i class="bi bi-search"></i></span>
@@ -18,18 +28,29 @@
 </div>
 
 
+<?php
+$b1Style = !empty($hs['banner1_image'])
+? 'background-image:url(' . e($hs['banner1_image']) . ');background-size:cover;background-position:center;'
+: 'background:' . ($hs['banner1_color'] ?? '#1a1a2e') . ';';
+
+$b2Style = !empty($hs['banner2_image'])
+? 'background-image:url(' . e($hs['banner2_image']) . ');background-size:cover;background-position:center;'
+: 'background:' . ($hs['banner2_color'] ?? '#0a1a10') . ';';
+?>
 <div class="banner-section">
     <div class="banner-grid">
-        <a href="<?php echo e(route('explore', ['category' => 'Illustrations'])); ?>" class="banner-card">
+        <a href="<?php echo e(route('explore', ['category' => 'Illustrations'])); ?>" class="banner-card"
+            style="<?php echo e($b1Style); ?>">
             <div class="banner-text">
-                <div class="banner-title">Made for creators</div>
-                <div class="banner-sub">Illustrations, avatars, emotes, live2d — made by humans who love what they do.</div>
+                <div class="banner-title"><?php echo e($hs['banner1_title'] ?? 'Made for creators'); ?></div>
+                <div class="banner-sub"><?php echo e($hs['banner1_subtitle'] ?? 'Illustrations, avatars, emotes, live2d — made by humans who love what they do.'); ?></div>
             </div>
         </a>
-        <a href="<?php echo e(route('explore')); ?>" class="banner-card" style="background:#0a1a10;">
+        <a href="<?php echo e(route('explore')); ?>" class="banner-card"
+            style="<?php echo e($b2Style); ?>">
             <div class="banner-text">
-                <div class="banner-title">No Generative AI</div>
-                <div class="banner-sub">Until generative AI is made with Consent, Credit, and Compensation, it is not welcome here.</div>
+                <div class="banner-title"><?php echo e($hs['banner2_title'] ?? 'No Generative AI'); ?></div>
+                <div class="banner-sub"><?php echo e($hs['banner2_subtitle'] ?? 'Until generative AI is made with Consent, Credit, and Compensation, it is not welcome here.'); ?></div>
             </div>
         </a>
     </div>
@@ -54,12 +75,12 @@
         <a href="<?php echo e(route('explore', ['category' => $cat->name])); ?>" class="cat-pill">
             <span>
                 <?php switch(strtolower($cat->name)):
-                    case ('illustrations'): ?> 🎨 <?php break; ?>
-                    <?php case ('2d avatars'): ?> 🧑 <?php break; ?>
-                    <?php case ('3d models'): ?> 🗿 <?php break; ?>
-                    <?php case ('emotes'): ?> 😀 <?php break; ?>
-                    <?php case ('live2d'): ?> 🎭 <?php break; ?>
-                    <?php default: ?> 🖼️
+                case ('illustrations'): ?> 🎨 <?php break; ?>
+                <?php case ('2d avatars'): ?> 🧑 <?php break; ?>
+                <?php case ('3d models'): ?> 🗿 <?php break; ?>
+                <?php case ('emotes'): ?> 😀 <?php break; ?>
+                <?php case ('live2d'): ?> 🎭 <?php break; ?>
+                <?php default: ?> 🖼️
                 <?php endswitch; ?>
             </span>
             <?php echo e($cat->name); ?>
@@ -81,19 +102,19 @@
                         <?php echo e($i === 0 ? '🥇' : ($i === 1 ? '🥈' : '🥉')); ?>
 
                     </div>
-                <?php else: ?>
+                    <?php else: ?>
                     <?php if($service->status === 'active'): ?>
-                        <span class="service-badge">OPEN</span>
+                    <span class="service-badge">OPEN</span>
                     <?php endif; ?>
-                <?php endif; ?>
+                    <?php endif; ?>
 
-                <?php if($service->like_count > 0): ?>
+                    <?php if($service->like_count > 0): ?>
                     <div class="service-like-badge">
                         <i class="bi bi-heart-fill" style="font-size:9px;"></i>
                         <?php echo e($service->like_count); ?>
 
                     </div>
-                <?php endif; ?>
+                    <?php endif; ?>
             </div>
             <div class="service-info">
                 <div class="service-name"><?php echo e($service->title); ?></div>
@@ -107,11 +128,11 @@
                 <div class="service-meta">
                     <div class="service-rating">
                         <?php if($service->review_count > 0): ?>
-                            <i class="bi bi-star-fill"></i>
-                            <span><?php echo e(number_format($service->avg_rating, 1)); ?></span>
-                            <span style="opacity:.6;">(<?php echo e($service->review_count); ?>)</span>
+                        <i class="bi bi-star-fill"></i>
+                        <span><?php echo e(number_format($service->avg_rating, 1)); ?></span>
+                        <span style="opacity:.6;">(<?php echo e($service->review_count); ?>)</span>
                         <?php else: ?>
-                            <span class="no-review"><i class="bi bi-star" style="font-size:11px;"></i> Baru</span>
+                        <span class="no-review"><i class="bi bi-star" style="font-size:11px;"></i> Baru</span>
                         <?php endif; ?>
                     </div>
                     <div class="service-price">Rp <?php echo e(number_format($service->base_price ?? 0, 0, ',', '.')); ?></div>
@@ -171,11 +192,11 @@
                 <div class="service-meta">
                     <div class="service-rating">
                         <?php if($service->review_count > 0): ?>
-                            <i class="bi bi-star-fill"></i>
-                            <span><?php echo e(number_format($service->avg_rating, 1)); ?></span>
-                            <span style="opacity:.6;">(<?php echo e($service->review_count); ?>)</span>
+                        <i class="bi bi-star-fill"></i>
+                        <span><?php echo e(number_format($service->avg_rating, 1)); ?></span>
+                        <span style="opacity:.6;">(<?php echo e($service->review_count); ?>)</span>
                         <?php else: ?>
-                            <span class="no-review"><i class="bi bi-heart" style="font-size:11px;"></i> Disukai</span>
+                        <span class="no-review"><i class="bi bi-heart" style="font-size:11px;"></i> Disukai</span>
                         <?php endif; ?>
                     </div>
                     <div class="service-price">Rp <?php echo e(number_format($service->base_price ?? 0, 0, ',', '.')); ?></div>

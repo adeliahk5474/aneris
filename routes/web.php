@@ -75,6 +75,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         });
         Route::get('/home-setting',   [AdminHomeSettingController::class, 'edit'])->name('home-setting.edit');
         Route::patch('/home-setting', [AdminHomeSettingController::class, 'update'])->name('home-setting.update');
+        Route::delete('/home-setting/image', [AdminHomeSettingController::class, 'removeImage'])->name('home-setting.remove-image');
     });
 });
 

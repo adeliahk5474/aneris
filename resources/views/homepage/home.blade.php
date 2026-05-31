@@ -10,7 +10,12 @@ $hs = \App\Models\HomeSetting::getAllKeyed();
 @endphp
 
 {{-- ── HERO ── --}}
-<div class="home-hero">
+@php
+$heroStyle = !empty($hs['hero_image'])
+? 'background-image:url(' . e($hs['hero_image']) . ');background-size:cover;background-position:center;'
+: '';
+@endphp
+<div class="home-hero" style="{{ $heroStyle }}">
     <h1>{{ $hs['hero_title'] ?? 'For the love of human creativity' }}</h1>
     @if(!empty($hs['hero_subtitle']))
     <p class="hero-subtitle">{{ $hs['hero_subtitle'] }}</p>
@@ -25,17 +30,26 @@ $hs = \App\Models\HomeSetting::getAllKeyed();
 </div>
 
 {{-- ── BANNER ── --}}
+@php
+$b1Style = !empty($hs['banner1_image'])
+? 'background-image:url(' . e($hs['banner1_image']) . ');background-size:cover;background-position:center;'
+: 'background:' . ($hs['banner1_color'] ?? '#1a1a2e') . ';';
+
+$b2Style = !empty($hs['banner2_image'])
+? 'background-image:url(' . e($hs['banner2_image']) . ');background-size:cover;background-position:center;'
+: 'background:' . ($hs['banner2_color'] ?? '#0a1a10') . ';';
+@endphp
 <div class="banner-section">
     <div class="banner-grid">
         <a href="{{ route('explore', ['category' => 'Illustrations']) }}" class="banner-card"
-            style="background: {{ $hs['banner1_color'] ?? '#1a1a2e' }};">
+            style="{{ $b1Style }}">
             <div class="banner-text">
                 <div class="banner-title">{{ $hs['banner1_title'] ?? 'Made for creators' }}</div>
                 <div class="banner-sub">{{ $hs['banner1_subtitle'] ?? 'Illustrations, avatars, emotes, live2d — made by humans who love what they do.' }}</div>
             </div>
         </a>
         <a href="{{ route('explore') }}" class="banner-card"
-            style="background: {{ $hs['banner2_color'] ?? '#0a1a10' }};">
+            style="{{ $b2Style }}">
             <div class="banner-text">
                 <div class="banner-title">{{ $hs['banner2_title'] ?? 'No Generative AI' }}</div>
                 <div class="banner-sub">{{ $hs['banner2_subtitle'] ?? 'Until generative AI is made with Consent, Credit, and Compensation, it is not welcome here.' }}</div>

@@ -76,3 +76,5 @@ if (cfg.switchToCommissionTab) {
     const btns = document.querySelectorAll('.tab-btn');
     if (btns[1]) switchTab('commission', btns[1]);
 }
+
+

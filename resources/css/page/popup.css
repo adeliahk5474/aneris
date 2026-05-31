@@ -67,6 +67,18 @@ body {
     gap: 7px
 }
 
+/* Tab terkunci */
+.tab-locked {
+    opacity: .6;
+    cursor: not-allowed !important;
+    position: relative;
+}
+.tab-locked:hover {
+    background: transparent !important;
+    color: inherit !important;
+}
+
+
 .tab-btn.active {
     background: var(--accent);
     color: #fff;

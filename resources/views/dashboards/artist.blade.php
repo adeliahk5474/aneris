@@ -98,9 +98,18 @@
             </div>
         </div>
 
+        {{-- Tombol New Service: kunci jika belum verif --}}
+        @if($artist->isVerifiedArtist())
         <a href="{{ route('upload.popup') }}" class="btn-new-service">
             <i class="bi bi-plus"></i> New Service
         </a>
+        @else
+        <a href="{{ route('artist.dashboard') }}?tab=portfolio" class="btn-new-service"
+            style="background:var(--surface2);color:var(--muted);border:1px solid var(--border);"
+            title="Verifikasi portfolio dulu untuk membuka commission">
+            <i class="bi bi-lock-fill" style="font-size:11px;"></i> New Service
+        </a>
+        @endif
 
         <nav class="sidebar-nav">
             <div class="nav-group-label">Studio</div>
@@ -119,7 +128,7 @@
                 <i class="bi bi-grid-3x3-gap"></i> Listings
             </a>
 
-            {{-- ── TAB PORTFOLIO VERIFIKASI ── --}}
+            {{-- TAB PORTFOLIO VERIFIKASI --}}
             <a class="sidebar-nav-item" onclick="switchDashTab('portfolio',this)" href="javascript:void(0)">
                 <i class="bi bi-patch-check"></i> Portfolio Verif
                 @if(isset($verification) && $verification?->status === 'pending')
@@ -150,9 +159,17 @@
                     <div class="dash-page-title">Dashboard Artist</div>
                     <div class="dash-page-sub">Welcome back, <span>{{ $artist->name }}</span>. Studio is live.</div>
                 </div>
+                {{-- Tombol Tambah Jasa: kunci jika belum verif --}}
+                @if($artist->isVerifiedArtist())
                 <a href="{{ route('upload.popup') }}" class="btn-add-service">
                     <i class="bi bi-plus"></i> Tambah Jasa
                 </a>
+                @else
+                <a href="{{ route('artist.dashboard') }}?tab=portfolio" class="btn-add-service"
+                    style="background:var(--surface2);color:var(--muted);border:1px solid var(--border);opacity:.8;">
+                    <i class="bi bi-lock-fill" style="font-size:11px;"></i> Tambah Jasa
+                </a>
+                @endif
             </div>
 
             <div class="stat-grid">
@@ -254,10 +271,10 @@
                             <span>{{ $order->client->name ?? '—' }}</span>
                             <span class="status-badge badge-{{ $order->status }}">
                                 {{ [
-                                        'pending'=>'Pending','paid'=>'Paid','in_progress'=>'In Progress',
-                                        'revision_requested'=>'Revision Requested','revision'=>'Revising',
-                                        'waiting_client'=>'Waiting Client','completed'=>'Completed','canceled'=>'Canceled'
-                                    ][$order->status] ?? ucfirst($order->status) }}
+                                    'pending'=>'Pending','paid'=>'Paid','in_progress'=>'In Progress',
+                                    'revision_requested'=>'Revision Requested','revision'=>'Revising',
+                                    'waiting_client'=>'Waiting Client','completed'=>'Completed','canceled'=>'Canceled'
+                                ][$order->status] ?? ucfirst($order->status) }}
                             </span>
                         </div>
                         @if($usedRevisions > 0 || $maxRevisions > 0)
@@ -479,9 +496,17 @@
             <div class="dash-page-title">Jasa Saya</div>
             <div class="dash-page-sub">Kelola semua jasa commission kamu</div>
         </div>
+        {{-- Tombol New Service listings: kunci jika belum verif --}}
+        @if($artist->isVerifiedArtist())
         <a href="{{ route('upload.popup') }}" class="btn-add-service">
             <i class="bi bi-plus"></i> New Service
         </a>
+        @else
+        <a href="{{ route('artist.dashboard') }}?tab=portfolio" class="btn-add-service"
+            style="background:var(--surface2);color:var(--muted);border:1px solid var(--border);opacity:.8;">
+            <i class="bi bi-lock-fill" style="font-size:11px;"></i> New Service
+        </a>
+        @endif
     </div>
 
     @if($myServices->count())
@@ -501,8 +526,8 @@
                     Max revisi: <strong style="color:var(--text);">{{ $svc->max_revisions ?? 3 }}x</strong>
                 </div>
                 <span style="font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; display:inline-block; margin-bottom:10px;
-                            background:{{ $svc->status==='active' ? 'var(--green-dim)' : 'var(--surface2)' }};
-                            color:{{ $svc->status==='active' ? 'var(--green)' : 'var(--muted)' }};">
+                                    background:{{ $svc->status==='active' ? 'var(--green-dim)' : 'var(--surface2)' }};
+                                    color:{{ $svc->status==='active' ? 'var(--green)' : 'var(--muted)' }};">
                     {{ strtoupper($svc->status) }}
                 </span>
                 <div style="display:flex; gap:8px;">
@@ -525,19 +550,18 @@
     @else
     <div style="text-align:center; padding:80px; color:var(--muted);">
         <i class="bi bi-grid-3x3-gap" style="font-size:40px; opacity:.2; display:block; margin-bottom:12px;"></i>
-        <p style="font-size:14px;">Belum ada jasa. <a href="{{ route('upload.popup') }}" style="color:var(--accent);">Buat sekarang</a></p>
+        <p style="font-size:14px;">Belum ada jasa.
+            @if($artist->isVerifiedArtist())
+            <a href="{{ route('upload.popup') }}" style="color:var(--accent);">Buat sekarang</a>
+            @else
+            <a href="{{ route('artist.dashboard') }}?tab=portfolio" style="color:var(--accent);">Verifikasi dulu</a> untuk membuka commission.
+            @endif
+        </p>
     </div>
     @endif
 </div>{{-- /listings --}}
 
-{{-- ══════════════════════════════════════════
-             TAB: PORTFOLIO VERIFIKASI
-             Logika:
-             - approved  → tampil status + info, form disembunyikan
-             - pending/in_review → tampil status menunggu, form disembunyikan
-             - rejected  → tampil feedback admin + form resubmit (jika sudah 30 hari)
-             - null      → tampil form upload pertama kali
-        ════════════════════════════════════════════ --}}
+{{-- ============ TAB: PORTFOLIO VERIFIKASI ============ --}}
 <div id="dash-portfolio" class="dash-tab-panel" style="display:none;">
 
     <div class="dash-page-header">
@@ -549,7 +573,7 @@
 
     @php
     $verif = $verification ?? null;
-    $verifStatus = $verif?->status; // null | pending | in_review | approved | rejected
+    $verifStatus = $verif?->status;
     $canResubmit = $verif?->status === 'rejected'
     && ($verif->next_eligible_at === null || now()->gte($verif->next_eligible_at));
     $daysLeft = $verif?->next_eligible_at
@@ -557,7 +581,7 @@
     : 0;
     @endphp
 
-    {{-- ── STATUS CARD (tampil jika sudah pernah submit) ── --}}
+    {{-- STATUS CARD --}}
     @if($verif)
     <div class="verif-status-card
                 @if($verifStatus === 'approved') verif-approved
@@ -617,7 +641,7 @@
             </div>
             @endif
 
-            @else {{-- pending / in_review --}}
+            @else
             <div class="verif-status-sub">
                 Submisi diterima pada {{ $verif->created_at->format('d M Y') }}.
                 Tim kami akan mereview dalam 3–5 hari kerja.
@@ -627,7 +651,7 @@
     </div>
     @endif
 
-    {{-- ── FORM UPLOAD (tampil jika: belum pernah submit, atau rejected + cooldown selesai) ── --}}
+    {{-- FORM UPLOAD --}}
     @if(!$verif || $canResubmit)
 
     @if($canResubmit)
@@ -641,7 +665,6 @@
         class="verif-form">
         @csrf
 
-        {{-- Error bag --}}
         @if($errors->any())
         <div class="alert-error" style="margin-bottom:16px;">
             <i class="bi bi-exclamation-circle"></i>
@@ -653,7 +676,7 @@
         </div>
         @endif
 
-        {{-- ── SECTION: File Portofolio ── --}}
+        {{-- File Portofolio --}}
         <div class="verif-section">
             <div class="verif-section-title">
                 <i class="bi bi-images"></i> File Portofolio
@@ -675,7 +698,7 @@
             <div id="portfolioPreview" class="verif-file-preview"></div>
         </div>
 
-        {{-- ── SECTION: Link Sosial Media ── --}}
+        {{-- Link Sosial Media --}}
         <div class="verif-section">
             <div class="verif-section-title">
                 <i class="bi bi-globe2"></i> Link Sosial Media / Portfolio Online
@@ -700,7 +723,7 @@
             </button>
         </div>
 
-        {{-- ── SECTION: Pernyataan ── --}}
+        {{-- Pernyataan --}}
         <div class="verif-section">
             <div class="verif-section-title">
                 <i class="bi bi-shield-check"></i> Pernyataan
@@ -722,7 +745,7 @@
     </form>
     @endif
 
-    {{-- Jika rejected tapi masih cooldown: tampilkan pesan saja (form sudah tersembunyi) --}}
+    {{-- Cooldown message --}}
     @if($verif && $verifStatus === 'rejected' && !$canResubmit && $daysLeft > 0)
     <div style="text-align:center; padding:40px; color:var(--muted); font-size:14px;">
         <i class="bi bi-clock" style="font-size:36px; opacity:.2; display:block; margin-bottom:12px;"></i>
@@ -743,61 +766,4 @@
     };
 </script>
 @vite('resources/js/dashboards/artist.js')
-
-<script>
-    /* ── Portfolio upload preview ── */
-    function updatePortfolioPreview(input) {
-        const preview = document.getElementById('portfolioPreview');
-        preview.innerHTML = '';
-        const files = Array.from(input.files);
-        files.forEach(file => {
-            const item = document.createElement('div');
-            item.className = 'verif-file-item';
-            const isImage = file.type.startsWith('image/');
-            if (isImage) {
-                const img = document.createElement('img');
-                img.src = URL.createObjectURL(file);
-                item.appendChild(img);
-            } else {
-                const icon = document.createElement('i');
-                icon.className = 'bi bi-file-earmark-richtext';
-                icon.style.cssText = 'font-size:24px; color:var(--accent);';
-                item.appendChild(icon);
-            }
-            const name = document.createElement('span');
-            name.textContent = file.name.length > 18 ? file.name.substring(0, 15) + '...' : file.name;
-            item.appendChild(name);
-            preview.appendChild(item);
-        });
-    }
-
-    /* ── Social link rows ── */
-    function addSocialRow() {
-        const container = document.getElementById('socialLinksContainer');
-        const row = document.createElement('div');
-        row.className = 'verif-social-row';
-        row.innerHTML = `
-        <input type="url" name="social_media_links[]" class="form-input"
-            placeholder="https://..." style="margin-bottom:0;">
-        <button type="button" class="verif-remove-link" onclick="removeSocialRow(this)">
-            <i class="bi bi-trash"></i>
-        </button>`;
-        container.appendChild(row);
-        // Show remove button on first row if more than 1 row
-        updateRemoveButtons();
-    }
-
-    function removeSocialRow(btn) {
-        btn.closest('.verif-social-row').remove();
-        updateRemoveButtons();
-    }
-
-    function updateRemoveButtons() {
-        const rows = document.querySelectorAll('.verif-social-row');
-        rows.forEach((row, i) => {
-            const btn = row.querySelector('.verif-remove-link');
-            if (btn) btn.style.display = rows.length > 1 ? 'flex' : 'none';
-        });
-    }
-</script>
 @endsection

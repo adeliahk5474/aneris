@@ -15,23 +15,17 @@ class UploadController extends Controller
 
     public function popup()
     {
-        // ── Step 8 Guard ──────────────────────────────────
-        // Blokir artist yang belum terverifikasi dari halaman upload commission
-        if (Auth::user()->role === 'artist' && !Auth::user()->canUploadCommission()) {
-            return redirect()->route('verification.create')
-                ->with('info', 'Kamu perlu terverifikasi dulu sebelum bisa membuka commission.');
-        }
-        // ─────────────────────────────────────────────────
-
-        $categories = Category::orderBy('name')->get();
-        $isArtist = Auth::user()->role === 'artist';
+        $categories   = Category::orderBy('name')->get();
+        $isArtist     = Auth::user()->role === 'artist';
+        $isVerified   = Auth::user()->canUploadCommission(); // true = boleh buka commission
         $switchToCommissionTab = (bool) (old('title') || old('description'));
         $titleCharCount = strlen(old('title', ''));
-        $descCharCount = strlen(old('description', ''));
+        $descCharCount  = strlen(old('description', ''));
 
         return view('page.popup', compact(
             'categories',
             'isArtist',
+            'isVerified',
             'switchToCommissionTab',
             'titleCharCount',
             'descCharCount'
@@ -72,7 +66,7 @@ class UploadController extends Controller
     public function uploadCommission(Request $request)
     {
         if (!Auth::user()->canUploadCommission()) {
-            return redirect()->route('verification.create')
+            return redirect()->route('artist.dashboard', ['tab' => 'portfolio'])
                 ->with('info', 'Kamu perlu terverifikasi dulu sebelum bisa membuka commission.');
         }
 
@@ -92,13 +86,11 @@ class UploadController extends Controller
             'status'         => 'nullable|in:active,inactive',
         ]);
 
-        // Cover image
         $coverUrl = \App\Services\CloudinaryService::upload(
             $request->file('image'),
             'commissions'
         );
 
-        // Gallery images (maks 3)
         $galleryUrls = [];
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $gFile) {
@@ -110,7 +102,6 @@ class UploadController extends Controller
             }
         }
 
-        // Add-ons
         $addons = [];
         if ($request->has('addons') && is_array($request->addons)) {
             foreach ($request->addons as $addon) {

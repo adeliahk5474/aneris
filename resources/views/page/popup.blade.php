@@ -4,10 +4,20 @@
 @section('content')
 @vite('resources/css/page/popup.css')
 
+{{-- URL dashboard tab portfolio untuk JS --}}
+@php
+$portfolioTabUrl = route('artist.dashboard') . '?tab=portfolio';
+@endphp
+
 <div class="popup-wrap">
 
     @if(session('success'))
     <div class="flash-ok"><i class="bi bi-check-circle-fill"></i> {{ session('success') }}</div>
+    @endif
+    @if(session('info'))
+    <div class="flash-info" style="background:rgba(108,108,255,.12);border:1px solid rgba(108,108,255,.25);color:#a5a5ff;padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;display:flex;align-items:center;gap:8px;">
+        <i class="bi bi-info-circle-fill"></i> {{ session('info') }}
+    </div>
     @endif
     @if($errors->any())
     <div class="flash-err">
@@ -21,8 +31,14 @@
             <i class="bi bi-image"></i> Post Artwork
         </button>
         @if($isArtist)
-        <button class="tab-btn" onclick="switchTab('commission',this)" type="button">
+        <button class="tab-btn {{ !$isVerified ? 'tab-locked' : '' }}"
+            onclick="{{ $isVerified ? 'switchTab(\'commission\',this)' : 'redirectToVerif()' }}"
+            type="button"
+            title="{{ !$isVerified ? 'Verifikasi portfolio dulu untuk membuka fitur ini' : '' }}">
             <i class="bi bi-briefcase-fill"></i> New Commission Service
+            @if(!$isVerified)
+            <i class="bi bi-lock-fill" style="font-size:11px; margin-left:4px; opacity:.7;"></i>
+            @endif
         </button>
         @endif
     </div>
@@ -67,6 +83,35 @@
 
     {{-- ══ COMMISSION PANEL ══ --}}
     @if($isArtist)
+
+    {{-- Panel kunci jika belum verif --}}
+    @if(!$isVerified)
+    <div id="panel-commission" class="panel" style="display:none;">
+        <div style="text-align:center; padding:60px 24px;">
+            <div style="font-size:48px; margin-bottom:16px;">🔒</div>
+            <div style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:10px;">
+                Verifikasi Portfolio Dulu
+            </div>
+            <div style="font-size:14px; color:var(--muted); max-width:380px; margin:0 auto 24px;">
+                Untuk membuka commission service, kamu perlu mendapat badge
+                <strong style="color:var(--accent);">Verified Non-AI</strong> terlebih dahulu.
+                Upload portofoliomu dan tim kami akan mereview dalam 3–5 hari kerja.
+            </div>
+            <a href="{{ route('artist.dashboard') }}?tab=portfolio"
+                style="display:inline-flex; align-items:center; gap:8px; background:var(--accent); color:#fff; padding:12px 28px; border-radius:10px; font-size:14px; font-weight:600; text-decoration:none; transition:opacity .2s;"
+                onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                <i class="bi bi-patch-check"></i> Ajukan Verifikasi Portfolio
+            </a>
+            <div style="margin-top:16px;">
+                <a href="{{ url()->previous() }}" style="font-size:13px; color:var(--muted); text-decoration:none;">
+                    ← Kembali
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @else
+    {{-- Panel commission normal jika sudah verif --}}
     <div id="panel-commission" class="panel">
         <form action="{{ route('upload.commission') }}" method="POST" enctype="multipart/form-data" id="commForm">
             @csrf
@@ -141,7 +186,6 @@
                     </div>
                 </div>
 
-                {{-- Estimated Days · Slots · Max Revisions --}}
                 <div class="fgrid3">
                     <div class="fg">
                         <label class="fl">Estimated Days <span>*</span></label>
@@ -239,13 +283,24 @@
             </div>
         </form>
     </div>
-    @endif
+    @endif {{-- /isVerified --}}
+
+    @endif {{-- /isArtist --}}
 </div>
 
 <script>
 window.popupPage = @json([
     'switchToCommissionTab' => $switchToCommissionTab,
+    'isVerified'            => $isVerified,
+    'portfolioTabUrl'       => route('artist.dashboard') . '?tab=portfolio',
 ]);
+
+// Redirect ke dashboard tab portfolio
+function redirectToVerif() {
+    window.location.href = window.popupPage.portfolioTabUrl;
+}
 </script>
+
+
 @vite('resources/js/page/popup.js')
 @endsection
