@@ -3,9 +3,128 @@
 /* ── CHART ──────────────────────────────────── */
 const cfg = window.artistDashboard || {};
 
+/* ══════════════════════════════════════════════════
+   PORTFOLIO UPLOAD STATE (accumulate, tidak reset)
+══════════════════════════════════════════════════ */
+let portfolioFiles = [];          // array File objects yang terakumulasi
+const MAX_PORTFOLIO = 10;
+
+/**
+ * Dipanggil dari onchange input file.
+ * Accumulate file ke array, TIDAK replace.
+ */
+function updatePortfolioPreview(input) {
+    const newFiles = Array.from(input.files);
+    // Reset nilai input supaya event change bisa trigger lagi untuk file sama
+    input.value = '';
+
+    for (const file of newFiles) {
+        if (portfolioFiles.length >= MAX_PORTFOLIO) break;
+        // Cegah duplikat berdasarkan nama + ukuran
+        const isDup = portfolioFiles.some(f => f.name === file.name && f.size === file.size);
+        if (!isDup) portfolioFiles.push(file);
+    }
+
+    renderPortfolioPreview();
+    syncPortfolioInput();
+}
+
+function renderPortfolioPreview() {
+    const preview = document.getElementById('portfolioPreview');
+    if (!preview) return;
+
+    preview.innerHTML = '';
+
+    portfolioFiles.forEach((file, idx) => {
+        const isImage = file.type.startsWith('image/');
+        const sizeMb  = file.size < 1024 * 1024
+            ? Math.round(file.size / 1024) + 'KB'
+            : (file.size / 1024 / 1024).toFixed(1) + 'MB';
+
+        const item = document.createElement('div');
+        item.className = 'verif-file-item';
+        item.style.cssText = 'position:relative;cursor:pointer;';
+
+        if (isImage) {
+            const img = document.createElement('img');
+            img.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:4px;';
+            const reader = new FileReader();
+            reader.onload = e => { img.src = e.target.result; };
+            reader.readAsDataURL(file);
+            item.appendChild(img);
+        } else {
+            const icon = document.createElement('i');
+            const ext  = file.name.split('.').pop().toLowerCase();
+            icon.className = ext === 'pdf' ? 'bi bi-file-earmark-pdf' : 'bi bi-file-earmark-richtext';
+            icon.style.cssText = 'font-size:24px;color:var(--accent);';
+            item.appendChild(icon);
+        }
+
+        const name = document.createElement('span');
+        const shortName = file.name.length > 14
+            ? file.name.substring(0, 11) + '...'
+            : file.name;
+        name.textContent = shortName + ' (' + sizeMb + ')';
+        name.style.cssText = 'font-size:10px;color:var(--muted);text-align:center;word-break:break-all;margin-top:4px;';
+        item.appendChild(name);
+
+        // Tombol hapus per-item
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.innerHTML = '×';
+        removeBtn.style.cssText = 'position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;' +
+            'background:var(--red);border:none;color:#fff;font-size:10px;cursor:pointer;' +
+            'display:flex;align-items:center;justify-content:center;line-height:1;padding:0;';
+        removeBtn.addEventListener('click', () => {
+            portfolioFiles.splice(idx, 1);
+            renderPortfolioPreview();
+            syncPortfolioInput();
+        });
+        item.appendChild(removeBtn);
+
+        preview.appendChild(item);
+    });
+
+    // Counter
+    const n = portfolioFiles.length;
+    let counter = preview.querySelector('.verif-file-counter');
+    if (!counter) {
+        counter = document.createElement('div');
+        counter.className = 'verif-file-counter';
+        counter.style.cssText = 'grid-column:1/-1;font-size:12px;margin-top:4px;';
+        preview.appendChild(counter);
+    }
+
+    if (n === 0) {
+        counter.textContent = '';
+        counter.style.color = 'var(--muted)';
+    } else if (n < 3) {
+        counter.textContent = `${n}/${MAX_PORTFOLIO} file dipilih — butuh minimal 3`;
+        counter.style.color = 'var(--yellow)';
+    } else {
+        counter.textContent = `${n}/${MAX_PORTFOLIO} file dipilih ✓`;
+        counter.style.color = 'var(--green)';
+    }
+}
+
+/**
+ * Sync array portfolioFiles kembali ke FileList di input
+ * supaya saat form submit semua file ikut terkirim.
+ */
+function syncPortfolioInput() {
+    const input = document.getElementById('portfolioFiles');
+    if (!input) return;
+
+    const dt = new DataTransfer();
+    portfolioFiles.forEach(f => dt.items.add(f));
+    input.files = dt.files;
+}
+
+/* ══════════════════════════════════════
+   CHART
+══════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
 
-    /* ── Revenue Chart ── */
     const ctx = document.getElementById('revenueChart');
     if (ctx && typeof Chart !== 'undefined') {
         new Chart(ctx, {
@@ -54,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* ── Modal backdrop click to close ── */
+    /* Modal backdrop click to close */
     ['sendModal', 'reviewModal'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('click', e => {
@@ -62,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /* ── Portfolio upload drag & drop ── */
+    /* Portfolio drop zone drag & drop */
     const dropZone = document.getElementById('portfolioDropZone');
     if (dropZone) {
         dropZone.addEventListener('dragover', e => {
@@ -70,51 +189,34 @@ document.addEventListener('DOMContentLoaded', () => {
             dropZone.style.borderColor = 'var(--accent)';
             dropZone.style.background  = 'var(--accent-dim)';
         });
-
         dropZone.addEventListener('dragleave', () => {
             dropZone.style.borderColor = '';
             dropZone.style.background  = '';
         });
-
         dropZone.addEventListener('drop', e => {
             e.preventDefault();
             dropZone.style.borderColor = '';
             dropZone.style.background  = '';
 
-            const input = document.getElementById('portfolioFiles');
-            if (!input) return;
-
-            // Transfer dropped files ke input
-            const dt    = e.dataTransfer;
-            const files = dt.files;
-
-            // DataTransfer untuk set files ke input
-            const transfer = new DataTransfer();
-            Array.from(files).forEach(f => transfer.items.add(f));
-            input.files = transfer.files;
-            updatePortfolioPreview(input);
+            const files = Array.from(e.dataTransfer.files);
+            for (const file of files) {
+                if (portfolioFiles.length >= MAX_PORTFOLIO) break;
+                const isDup = portfolioFiles.some(f => f.name === file.name && f.size === file.size);
+                if (!isDup) portfolioFiles.push(file);
+            }
+            renderPortfolioPreview();
+            syncPortfolioInput();
         });
     }
 
-    /* ── Auto-open tab dari URL query ?tab=xxx ── */
+    /* Auto-open tab dari URL query ?tab=xxx */
     const params  = new URLSearchParams(window.location.search);
     const tabName = params.get('tab');
     if (tabName) {
-        // Cari nav item yang cocok
         const navItem = document.querySelector(`.sidebar-nav-item[onclick*="'${tabName}'"]`);
         switchDashTab(tabName, navItem || null);
     }
 
-    /* ── Auto-show flash session di tab yang benar ── */
-    // Jika ada alert-success/error di DOM dan tab portfolio aktif, scroll ke atas
-    const successAlert = document.querySelector('.alert-success');
-    const errorAlert   = document.querySelector('.alert-error');
-    if ((successAlert || errorAlert) && tabName === 'portfolio') {
-        const panel = document.getElementById('dash-portfolio');
-        if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    /* ── Inisialisasi remove button sosmed (baris pertama) ── */
     updateRemoveButtons();
 });
 
@@ -130,7 +232,6 @@ function switchDashTab(name, el) {
     if (panel) panel.style.display = 'block';
     if (el)    el.classList.add('active');
 
-    // Update URL tanpa reload supaya browser back button tetap waras
     const url = new URL(window.location.href);
     if (name === 'overview') {
         url.searchParams.delete('tab');
@@ -201,85 +302,18 @@ function closeReviewModal() {
 
 
 /* ════════════════════════════════════════
-   PORTFOLIO UPLOAD PREVIEW
-════════════════════════════════════════ */
-function updatePortfolioPreview(input) {
-    const preview = document.getElementById('portfolioPreview');
-    if (!preview) return;
-
-    preview.innerHTML = '';
-    const files    = Array.from(input.files);
-    const maxFiles = 10;
-
-    // Validasi jumlah file
-    if (files.length > maxFiles) {
-        showVerifAlert(`Maksimal ${maxFiles} file. Kamu memilih ${files.length} file.`, 'error');
-        input.value = '';
-        return;
-    }
-
-    if (files.length < 3) {
-        showVerifAlert('Pilih minimal 3 file portofolio.', 'warning');
-    } else {
-        clearVerifAlert();
-    }
-
-    files.forEach((file, i) => {
-        const item = document.createElement('div');
-        item.className = 'verif-file-item';
-
-        const isImage = file.type.startsWith('image/');
-
-        if (isImage) {
-            const img    = document.createElement('img');
-            img.src      = URL.createObjectURL(file);
-            img.onload   = () => URL.revokeObjectURL(img.src); // cleanup memory
-            item.appendChild(img);
-        } else {
-            const icon       = document.createElement('i');
-            const ext        = file.name.split('.').pop().toLowerCase();
-            icon.className   = ext === 'pdf'
-                ? 'bi bi-file-earmark-pdf'
-                : 'bi bi-file-earmark-richtext';
-            icon.style.cssText = 'font-size:24px; color:var(--accent);';
-            item.appendChild(icon);
-        }
-
-        const sizeMb = (file.size / 1024 / 1024).toFixed(1);
-        const name   = document.createElement('span');
-        name.textContent = (file.name.length > 14
-            ? file.name.substring(0, 11) + '...'
-            : file.name) + ` (${sizeMb}MB)`;
-        item.appendChild(name);
-
-        preview.appendChild(item);
-    });
-
-    // Counter
-    const counter       = document.createElement('div');
-    counter.className   = 'verif-file-counter';
-    counter.style.cssText = 'grid-column:1/-1; font-size:12px; color:var(--muted); margin-top:4px;';
-    counter.textContent = `${files.length}/${maxFiles} file dipilih`;
-    preview.appendChild(counter);
-}
-
-
-/* ════════════════════════════════════════
-   SOCIAL LINK ROWS
+   SOCIAL LINK ROWS (di tab portfolio)
 ════════════════════════════════════════ */
 function addSocialRow() {
     const container = document.getElementById('socialLinksContainer');
     if (!container) return;
 
     const rows = container.querySelectorAll('.verif-social-row');
-    if (rows.length >= 5) {
-        showVerifAlert('Maksimal 5 link sosial media.', 'warning');
-        return;
-    }
+    if (rows.length >= 5) return;
 
-    const row       = document.createElement('div');
-    row.className   = 'verif-social-row';
-    row.innerHTML   = `
+    const row     = document.createElement('div');
+    row.className = 'verif-social-row';
+    row.innerHTML = `
         <input type="url" name="social_media_links[]" class="form-input"
             placeholder="https://..." style="margin-bottom:0;">
         <button type="button" class="verif-remove-link" onclick="removeSocialRow(this)">
@@ -307,42 +341,16 @@ function updateRemoveButtons() {
 
 
 /* ════════════════════════════════════════
-   VERIF ALERT HELPERS (inline di form)
-════════════════════════════════════════ */
-function showVerifAlert(msg, type = 'error') {
-    clearVerifAlert();
-    const form  = document.querySelector('.verif-form');
-    if (!form) return;
-
-    const div   = document.createElement('div');
-    div.id      = 'verifInlineAlert';
-    div.className = type === 'error' ? 'alert-error' : 'alert-warning';
-
-    // warning style tidak ada di CSS, fallback ke kuning
-    if (type === 'warning') {
-        div.style.cssText = 'background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--yellow);';
-    }
-
-    div.innerHTML = `<i class="bi bi-exclamation-circle"></i> ${msg}`;
-    form.prepend(div);
-}
-
-function clearVerifAlert() {
-    document.getElementById('verifInlineAlert')?.remove();
-}
-
-
-/* ════════════════════════════════════════
    GLOBAL EXPORTS
 ════════════════════════════════════════ */
-window.switchDashTab         = switchDashTab;
-window.filterOrders          = filterOrders;
-window.openSendModal         = openSendModal;
-window.closeSendModal        = closeSendModal;
-window.showFileName          = showFileName;
-window.openReviewModal       = openReviewModal;
-window.closeReviewModal      = closeReviewModal;
+window.switchDashTab          = switchDashTab;
+window.filterOrders           = filterOrders;
+window.openSendModal          = openSendModal;
+window.closeSendModal         = closeSendModal;
+window.showFileName           = showFileName;
+window.openReviewModal        = openReviewModal;
+window.closeReviewModal       = closeReviewModal;
 window.updatePortfolioPreview = updatePortfolioPreview;
-window.addSocialRow          = addSocialRow;
-window.removeSocialRow       = removeSocialRow;
-window.updateRemoveButtons   = updateRemoveButtons;
+window.addSocialRow           = addSocialRow;
+window.removeSocialRow        = removeSocialRow;
+window.updateRemoveButtons    = updateRemoveButtons;
