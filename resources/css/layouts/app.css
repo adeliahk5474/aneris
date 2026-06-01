@@ -346,15 +346,86 @@ body {
 .app-topnav-spacer { height: var(--topnav-height); }
 .app-content { min-height: calc(100vh - var(--topnav-height)); }
 
+/* ── MOBILE ─────────────────────────────── */
 @media (max-width: 768px) {
-    #app-topnav { padding: 0 16px; gap: 16px; }
-    .app-logo-text { display: none; }
-    .app-nav-link span { display: none; }
-    .app-nav-link { padding: 6px 10px; }
-    .btn-artist { display: none; }
-    .profile-trigger-name { display: none; }
-    .profile-trigger { padding: 4px; }
+    #app-topnav {
+        padding: 0 14px;
+        gap: 8px;
+    }
+
+    /* Logo tetap tampil di HP */
+    .app-logo-text {
+        display: block;
+        font-size: 16px;
+    }
+
+    /* Nav center — tampilkan icon saja, sembunyikan label teks */
+    .app-nav-center {
+        gap: 0;
+    }
+
+    .app-nav-link {
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    /* Sembunyikan label teks nav di HP kecuali icon */
+    .app-nav-link span {
+        display: none;
+    }
+
+    /* Icon tetap tampil */
+    .app-nav-link i {
+        font-size: 18px;
+        display: block;
+    }
+
+    /* Sembunyikan tombol "I'm an artist+" di HP */
+    .btn-artist {
+        display: none;
+    }
+
+    /* Nama profil tetap tersembunyi di HP */
+    .profile-trigger-name {
+        display: none;
+    }
+
+    .profile-trigger {
+        padding: 4px;
+    }
+
+    /* Icon notif & cart tetap tampil */
+    .app-icon-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+
+    /* Signup button lebih kecil */
+    .btn-signup {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
 }
+
+@media (max-width: 400px) {
+    /* Layar sangat kecil — kompres lebih lanjut */
+    .app-nav-link {
+        padding: 6px 8px;
+    }
+
+    .app-logo-mark {
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
+    }
+
+    .app-logo-text {
+        font-size: 14px;
+    }
+}
+
 /* ── CHAT NOTIFICATION TOAST ── */
 #chat-notif-toast {
     position: fixed;
@@ -370,8 +441,6 @@ body {
     width: 100%;
     cursor: pointer;
     border: 1px solid rgba(255,255,255,0.08);
-
-    /* hidden by default */
     opacity: 0;
     transform: translateY(16px);
     pointer-events: none;
@@ -457,6 +526,7 @@ body {
     text-align: center;
     pointer-events: none;
 }
+
 .chat-nav-badge.visible {
     display: inline-block;
 }

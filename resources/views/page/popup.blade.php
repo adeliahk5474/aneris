@@ -4,12 +4,10 @@
 @section('content')
 @vite('resources/css/page/popup.css')
 
-{{-- URL dashboard tab portfolio untuk JS --}}
-@php
-$portfolioTabUrl = route('artist.dashboard') . '?tab=portfolio';
-@endphp
-
-<div class="popup-wrap">
+<div class="popup-wrap"
+    data-switch-commission="{{ $switchToCommissionTab ? 'true' : 'false' }}"
+    data-is-verified="{{ $isVerified ? 'true' : 'false' }}"
+    data-portfolio-url="{{ route('artist.dashboard') }}?tab=portfolio">
 
     @if(session('success'))
     <div class="flash-ok"><i class="bi bi-check-circle-fill"></i> {{ session('success') }}</div>
@@ -84,7 +82,6 @@ $portfolioTabUrl = route('artist.dashboard') . '?tab=portfolio';
     {{-- ══ COMMISSION PANEL ══ --}}
     @if($isArtist)
 
-    {{-- Panel kunci jika belum verif --}}
     @if(!$isVerified)
     <div id="panel-commission" class="panel" style="display:none;">
         <div style="text-align:center; padding:60px 24px;">
@@ -111,13 +108,11 @@ $portfolioTabUrl = route('artist.dashboard') . '?tab=portfolio';
     </div>
 
     @else
-    {{-- Panel commission normal jika sudah verif --}}
     <div id="panel-commission" class="panel">
         <form action="{{ route('upload.commission') }}" method="POST" enctype="multipart/form-data" id="commForm">
             @csrf
             <input type="hidden" name="status" id="commStatus" value="active">
 
-            {{-- ── 1: IMAGES ── --}}
             <div class="scard">
                 <div class="stitle">
                     <span class="stitle-left"><i class="bi bi-images"></i> Cover & Gallery</span>
@@ -152,7 +147,6 @@ $portfolioTabUrl = route('artist.dashboard') . '?tab=portfolio';
                 </div>
             </div>
 
-            {{-- ── 2: SERVICE INFO ── --}}
             <div class="scard">
                 <div class="stitle"><span class="stitle-left"><i class="bi bi-info-circle-fill"></i> Service Info</span></div>
 
@@ -192,7 +186,6 @@ $portfolioTabUrl = route('artist.dashboard') . '?tab=portfolio';
                         <input type="number" name="estimated_days" class="fi"
                             placeholder="7" min="1" max="365"
                             value="{{ old('estimated_days', 7) }}" required>
-                        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Hari pengerjaan — deadline dihitung otomatis</div>
                     </div>
                     <div class="fg">
                         <label class="fl">Slots Available</label>
@@ -205,7 +198,6 @@ $portfolioTabUrl = route('artist.dashboard') . '?tab=portfolio';
                         <input type="number" name="revision_limit" class="fi"
                             placeholder="2" min="0" max="20"
                             value="{{ old('revision_limit', 2) }}">
-                        <div style="font-size:11px;color:var(--muted);margin-top:4px;">0 = tidak ada revisi</div>
                     </div>
                 </div>
 
@@ -219,7 +211,6 @@ $portfolioTabUrl = route('artist.dashboard') . '?tab=portfolio';
                 </div>
             </div>
 
-            {{-- ── 3: ADD-ONS ── --}}
             <div class="scard">
                 <div class="stitle">
                     <span class="stitle-left"><i class="bi bi-plus-circle-fill"></i> Optional Add-ons</span>
@@ -252,7 +243,6 @@ $portfolioTabUrl = route('artist.dashboard') . '?tab=portfolio';
                 </button>
             </div>
 
-            {{-- ── 4: DO & DON'T ── --}}
             <div class="scard">
                 <div class="stitle"><span class="stitle-left"><i class="bi bi-list-check"></i> Do & Don't</span></div>
                 <div class="gl-grid">
@@ -271,7 +261,6 @@ $portfolioTabUrl = route('artist.dashboard') . '?tab=portfolio';
                 </div>
             </div>
 
-            {{-- ── SUBMIT ── --}}
             <div class="submit-row">
                 <a href="{{ url()->previous() }}" class="btn-c"><i class="bi bi-arrow-left"></i> Cancel</a>
                 <button type="button" class="btn-c" onclick="saveDraft()">
@@ -283,24 +272,10 @@ $portfolioTabUrl = route('artist.dashboard') . '?tab=portfolio';
             </div>
         </form>
     </div>
-    @endif {{-- /isVerified --}}
+    @endif
 
-    @endif {{-- /isArtist --}}
+    @endif
 </div>
-
-<script>
-window.popupPage = @json([
-    'switchToCommissionTab' => $switchToCommissionTab,
-    'isVerified'            => $isVerified,
-    'portfolioTabUrl'       => route('artist.dashboard') . '?tab=portfolio',
-]);
-
-// Redirect ke dashboard tab portfolio
-function redirectToVerif() {
-    window.location.href = window.popupPage.portfolioTabUrl;
-}
-</script>
-
 
 @vite('resources/js/page/popup.js')
 @endsection

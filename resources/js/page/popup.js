@@ -1,4 +1,12 @@
-const cfg = window.popupPage || {};
+// resources/js/page/popup.js
+
+// Baca config dari data attributes di .popup-wrap
+const wrap = document.querySelector('.popup-wrap');
+const cfg = {
+    switchToCommissionTab: wrap?.dataset.switchCommission === 'true',
+    isVerified:            wrap?.dataset.isVerified === 'true',
+    portfolioTabUrl:       wrap?.dataset.portfolioUrl ?? '/dashboard',
+};
 
 function switchTab(tab, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -41,11 +49,11 @@ function addAddon() {
     const row = document.createElement('div');
     row.className = 'addon-row';
     row.innerHTML = `
-            <input type="text" name="addons[${i}][name]" class="afield" placeholder="Add-on name">
-            <input type="text" name="addons[${i}][description]" class="afield" placeholder="Short description">
-            <div class="apbox"><span class="appfx">Rp</span><input type="number" name="addons[${i}][price]" class="apinp" placeholder="0" min="0" step="1000"></div>
-            <button type="button" class="arm" onclick="removeAddon(this)"><i class="bi bi-trash3"></i></button>
-        `;
+        <input type="text" name="addons[${i}][name]" class="afield" placeholder="Add-on name">
+        <input type="text" name="addons[${i}][description]" class="afield" placeholder="Short description">
+        <div class="apbox"><span class="appfx">Rp</span><input type="number" name="addons[${i}][price]" class="apinp" placeholder="0" min="0" step="1000"></div>
+        <button type="button" class="arm" onclick="removeAddon(this)"><i class="bi bi-trash3"></i></button>
+    `;
     document.getElementById('addon-list').appendChild(row);
     row.querySelector('input').focus();
 }
@@ -64,17 +72,23 @@ function countChars(el, counterId) {
     if (counter) counter.textContent = el.value.length;
 }
 
-window.switchTab = switchTab;
-window.previewSlot = previewSlot;
-window.clearSlot = clearSlot;
-window.addAddon = addAddon;
-window.removeAddon = removeAddon;
-window.saveDraft = saveDraft;
-window.countChars = countChars;
+// Redirect ke dashboard tab portfolio jika belum verif
+function redirectToVerif() {
+    window.location.href = cfg.portfolioTabUrl;
+}
 
-if (cfg.switchToCommissionTab) {
+window.switchTab       = switchTab;
+window.previewSlot     = previewSlot;
+window.clearSlot       = clearSlot;
+window.addAddon        = addAddon;
+window.removeAddon     = removeAddon;
+window.saveDraft       = saveDraft;
+window.countChars      = countChars;
+window.redirectToVerif = redirectToVerif;
+
+// Auto-switch ke tab commission HANYA jika sudah verif
+// (misalnya setelah validation error di form commission)
+if (cfg.switchToCommissionTab && cfg.isVerified) {
     const btns = document.querySelectorAll('.tab-btn');
     if (btns[1]) switchTab('commission', btns[1]);
 }
-
-
