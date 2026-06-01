@@ -84,11 +84,9 @@
 $verif = $verification ?? null;
 $verifStatus = $verif?->status;
 $hasSubmission = $verif && in_array($verifStatus, ['pending','in_review','approved','rejected']);
-$canResubmit = $verifStatus === 'rejected'
-&& ($verif->next_eligible_at === null || now()->gte($verif->next_eligible_at));
-$daysLeft = $verif?->next_eligible_at
-? (int) now()->diffInDays($verif->next_eligible_at, false)
-: 0;
+
+// Link Portfolio Verif: sudah submit → status, belum → create
+$verifLink = $hasSubmission ? route('verification.status') : route('verification.create');
 @endphp
 
 <div class="dashboard-layout">
@@ -139,11 +137,8 @@ $daysLeft = $verif?->next_eligible_at
                 <i class="bi bi-grid-3x3-gap"></i> Listings
             </a>
 
-            {{-- TAB PORTFOLIO VERIFIKASI --}}
-            {{-- Kalau sudah ada submission → ke halaman status --}}
-            {{-- Kalau belum → buka tab di dashboard --}}
-            @if($hasSubmission)
-            <a class="sidebar-nav-item" href="{{ route('verification.status') }}">
+            {{-- Portfolio Verif: selalu link ke halaman terpisah --}}
+            <a class="sidebar-nav-item" href="{{ $verifLink }}">
                 <i class="bi bi-patch-check"></i> Portfolio Verif
                 @if($verifStatus === 'pending' || $verifStatus === 'in_review')
                 <span style="margin-left:auto; background:var(--yellow); color:#000; font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px;">
@@ -159,11 +154,6 @@ $daysLeft = $verif?->next_eligible_at
                 </span>
                 @endif
             </a>
-            @else
-            <a class="sidebar-nav-item" onclick="switchDashTab('portfolio',this)" href="javascript:void(0)">
-                <i class="bi bi-patch-check"></i> Portfolio Verif
-            </a>
-            @endif
 
             <div class="nav-group-label">Finance</div>
             <a class="sidebar-nav-item" href="javascript:void(0)">
@@ -261,7 +251,7 @@ $daysLeft = $verif?->next_eligible_at
                             <i class="bi bi-patch-exclamation" style="margin-right:4px;"></i> Belum Terverifikasi
                         </div>
                         <div class="tip-text">Submit portofoliomu untuk mendapat badge Verified Non-AI dan bisa membuka commission.</div>
-                        <a href="{{ $hasSubmission ? route('verification.status') : route('verification.create') }}"
+                        <a href="{{ $verifLink }}"
                             style="display:inline-block; margin-top:8px; font-size:12px; color:var(--accent); font-weight:600;">
                             {{ $hasSubmission ? 'Lihat Status →' : 'Ajukan Verifikasi →' }}
                         </a>
@@ -580,96 +570,6 @@ $daysLeft = $verif?->next_eligible_at
     </div>
     @endif
 </div>{{-- /listings --}}
-
-{{-- ============ TAB: PORTFOLIO VERIFIKASI ============ --}}
-{{-- Hanya tampil jika belum ada submission sama sekali --}}
-@if(!$hasSubmission)
-<div id="dash-portfolio" class="dash-tab-panel" style="display:none;">
-
-    <div class="dash-page-header">
-        <div>
-            <div class="dash-page-title">Verifikasi Portfolio</div>
-            <div class="dash-page-sub">Buktikan karyamu adalah karya manusia asli.</div>
-        </div>
-    </div>
-
-    <form action="{{ route('verification.store') }}" method="POST" enctype="multipart/form-data"
-        class="verif-form">
-        @csrf
-
-        @if($errors->any())
-        <div class="alert-error" style="margin-bottom:16px;">
-            <i class="bi bi-exclamation-circle"></i>
-            <ul style="margin:6px 0 0 16px; padding:0;">
-                @foreach($errors->all() as $err)
-                <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
-
-        <div class="verif-section">
-            <div class="verif-section-title">
-                <i class="bi bi-images"></i> File Portofolio
-            </div>
-            <div class="verif-section-desc">
-                Upload 3–10 karya terbaikmu. Sertakan minimal 1 file WIP (work-in-progress) atau sketch layer.
-                Format: JPG, PNG, PSD, PDF · Maks 20MB per file.
-            </div>
-            <div class="verif-upload-area" id="portfolioDropZone">
-                <input type="file" name="portfolio_files[]" id="portfolioFiles"
-                    accept="image/*,.pdf,.psd,.psb" multiple required
-                    onchange="updatePortfolioPreview(this)">
-                <i class="bi bi-cloud-arrow-up" style="font-size:28px; color:var(--muted); display:block; margin-bottom:8px;"></i>
-                <div style="font-size:13px; color:var(--muted);">Klik atau drag file ke sini</div>
-                <div style="font-size:11px; color:var(--muted); margin-top:4px;">Minimal 3 file, maksimal 10 file</div>
-            </div>
-            <div id="portfolioPreview" class="verif-file-preview"></div>
-        </div>
-
-        <div class="verif-section">
-            <div class="verif-section-title">
-                <i class="bi bi-globe2"></i> Link Sosial Media / Portfolio Online
-            </div>
-            <div class="verif-section-desc">
-                Tambahkan minimal 1 link (Instagram, ArtStation, Behance, Twitter/X, dll) yang menampilkan karya dan aktivitas aslimu.
-            </div>
-            <div id="socialLinksContainer">
-                <div class="verif-social-row">
-                    <input type="url" name="social_media_links[]"
-                        class="form-input" placeholder="https://instagram.com/username"
-                        style="margin-bottom:0;" required>
-                    <button type="button" class="verif-remove-link" onclick="removeSocialRow(this)" style="display:none;">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </div>
-            <button type="button" class="verif-add-link" onclick="addSocialRow()">
-                <i class="bi bi-plus"></i> Tambah Link
-            </button>
-        </div>
-
-        <div class="verif-section">
-            <div class="verif-section-title">
-                <i class="bi bi-shield-check"></i> Pernyataan
-            </div>
-            <label class="verif-checkbox-row">
-                <input type="checkbox" name="declaration" value="1" required>
-                <span>
-                    Saya menyatakan bahwa semua karya yang diupload adalah hasil kerja saya sendiri,
-                    bukan hasil AI generatif, dan saya berhak atas karya tersebut.
-                </span>
-            </label>
-        </div>
-
-        <button type="submit" class="btn-verif-submit">
-            <i class="bi bi-send-check"></i> Ajukan Verifikasi
-        </button>
-
-    </form>
-
-</div>{{-- /portfolio --}}
-@endif
 
 </main>
 </div>
