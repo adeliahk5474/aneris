@@ -2,21 +2,17 @@
 
 namespace App\Services;
 
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\Storage;
 
 class CloudinaryService
 {
     public static function upload($file, string $folder = 'general'): string
     {
-        $result = Cloudinary::upload(
-            is_string($file) ? $file : $file->getRealPath(),
-            [
-                'folder'        => 'aneris/' . $folder,
-                'resource_type' => 'auto',
-            ]
-        );
+        $path = 'aneris/' . $folder . '/' . uniqid() . '.' . $file->getClientOriginalExtension();
 
-        return $result->getSecurePath();
+        Storage::disk('cloudinary')->put($path, file_get_contents($file->getRealPath()));
+
+        return Storage::disk('cloudinary')->url($path);
     }
 
     public static function delete(?string $urlOrPublicId): void
@@ -32,18 +28,19 @@ class CloudinaryService
 
         if ($publicId) {
             try {
-                Cloudinary::destroy($publicId);
-            } catch (\Throwable) {}
+                Storage::disk('cloudinary')->delete($publicId);
+            } catch (\Throwable) {
+            }
         }
     }
 
     public static function uploadBase64(string $base64, string $folder = 'general'): string
     {
-        $result = Cloudinary::upload($base64, [
-            'folder'        => 'aneris/' . $folder,
-            'resource_type' => 'auto',
-        ]);
+        $data = base64_decode(preg_replace('/^data:\w+\/\w+;base64,/', '', $base64));
+        $path = 'aneris/' . $folder . '/' . uniqid() . '.jpg';
 
-        return $result->getSecurePath();
+        Storage::disk('cloudinary')->put($path, $data);
+
+        return Storage::disk('cloudinary')->url($path);
     }
 }
