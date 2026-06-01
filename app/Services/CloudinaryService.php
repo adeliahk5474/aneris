@@ -2,103 +2,83 @@
 
 namespace App\Services;
 
+use Cloudinary\Cloudinary;
+use Cloudinary\Configuration\Configuration;
+
 class CloudinaryService
 {
+    private static function client(): Cloudinary
+    {
+        Configuration::instance([
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key'    => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+            ],
+            'url' => [
+                'secure' => true,
+            ],
+        ]);
+
+        return new Cloudinary();
+    }
+
     /**
-     * Upload file, return secure URL.
-     * Pakai helper cloudinary() dari package cloudinary-laravel
-     * — sama persis dengan yang dipakai di artwork upload (sudah terbukti jalan).
-     *
-     * @param  \Illuminate\Http\UploadedFile  $file
-     * @param  string  $folder  Sub-folder di bawah 'aneris/'
-     * @return string  Secure URL
+     * Upload file ke Cloudinary.
+     * $file bisa berupa UploadedFile atau path string.
      */
     public static function upload($file, string $folder = 'general'): string
     {
-        $result = cloudinary()->upload(
-            $file->getRealPath(),
-            [
-                'folder'        => 'aneris/' . $folder,
-                'resource_type' => 'auto',
-                'transformation' => [
-                    'quality'      => 'auto',
-                    'fetch_format' => 'auto',
-                ],
-            ]
-        );
+        $cloudinary = self::client();
 
-        return $result->getSecurePath();
+        $path = is_string($file) ? $file : $file->getRealPath();
+
+        $result = $cloudinary->uploadApi()->upload($path, [
+            'folder'        => 'aneris/' . $folder,
+            'resource_type' => 'auto',
+        ]);
+
+        return $result['secure_url'];
     }
 
     /**
-     * Upload file, return [url, public_id].
-     *
-     * @param  \Illuminate\Http\UploadedFile  $file
-     * @param  string  $folder
-     * @return array{url: string, public_id: string}
+     * Hapus file dari Cloudinary berdasarkan URL atau public_id.
      */
-    public static function uploadWithId($file, string $folder = 'general'): array
+    public static function delete(?string $urlOrPublicId): void
     {
-        $result = cloudinary()->upload(
-            $file->getRealPath(),
-            [
-                'folder'        => 'aneris/' . $folder,
-                'resource_type' => 'auto',
-                'transformation' => [
-                    'quality'      => 'auto',
-                    'fetch_format' => 'auto',
-                ],
-            ]
-        );
+        if (!$urlOrPublicId) return;
 
-        return [
-            'url'       => $result->getSecurePath(),
-            'public_id' => $result->getPublicId(),
-        ];
-    }
+        $cloudinary = self::client();
 
-    /**
-     * Upload dari path file langsung (bukan UploadedFile).
-     *
-     * @param  string  $filePath  Path absolut ke file
-     * @param  string  $folder
-     * @return array{url: string, public_id: string}
-     */
-    public static function uploadFromPath(string $filePath, string $folder = 'general'): array
-    {
-        $result = cloudinary()->upload(
-            $filePath,
-            [
-                'folder'        => 'aneris/' . $folder,
-                'resource_type' => 'auto',
-                'transformation' => [
-                    'quality'      => 'auto',
-                    'fetch_format' => 'auto',
-                ],
-            ]
-        );
-
-        return [
-            'url'       => $result->getSecurePath(),
-            'public_id' => $result->getPublicId(),
-        ];
-    }
-
-    /**
-     * Hapus file dari Cloudinary berdasarkan public_id.
-     *
-     * @param  string  $publicId
-     */
-    public static function destroy(string $publicId): void
-    {
-        if (!$publicId) return;
-
-        try {
-            cloudinary()->destroy($publicId);
-        } catch (\Throwable $e) {
-            \Log::warning('Cloudinary destroy failed: ' . $e->getMessage(), [
-                'public_id' => $publicId,
-            ]);
+        // Kalau berupa URL Cloudinary, ekstrak public_id-nya
+        if (str_contains($urlOrPublicId, 'cloudinary.com')) {
+            preg_match('/upload\/(?:v\d+\/)?(.+)\.[a-z]+$/i', $urlOrPublicId, $matches);
+            $publicId = $matches[1] ?? null;
+        } else {
+            $publicId = $urlOrPublicId;
         }
+
+        if ($publicId) {
+            try {
+                $cloudinary->uploadApi()->destroy($publicId);
+            } catch (\Throwable) {
+                // Gagal hapus — lanjut saja
+            }
+        }
+    }
+
+    /**
+     * Upload dari base64 string.
+     */
+    public static function uploadBase64(string $base64, string $folder = 'general'): string
+    {
+        $cloudinary = self::client();
+
+        $result = $cloudinary->uploadApi()->upload($base64, [
+            'folder'        => 'aneris/' . $folder,
+            'resource_type' => 'auto',
+        ]);
+
+        return $result['secure_url'];
     }
 }
