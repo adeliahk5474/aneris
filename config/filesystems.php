@@ -73,9 +73,12 @@ return [
             'use_path_style_endpoint' => false,
             'throw' => false,
         ],
-        'cloudinary' => [
-            'driver' => 'cloudinary',
-        ],
+
+    'cloudinary' => [
+        'driver' => 'cloudinary',
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+        'api_key' => env('CLOUDINARY_API_KEY'),
+        'api_secret' => env('CLOUDINARY_API_SECRET'),
 
     ],
 
