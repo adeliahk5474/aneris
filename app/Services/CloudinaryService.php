@@ -2,17 +2,25 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Storage;
-
 class CloudinaryService
 {
     public static function upload($file, string $folder = 'general'): string
     {
-        $path = 'aneris/' . $folder . '/' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $realPath = $file->getRealPath();
 
-        Storage::disk('cloudinary')->put($path, file_get_contents($file->getRealPath()));
+        if (!$realPath || !file_exists($realPath)) {
+            throw new \RuntimeException('File tidak valid atau upload gagal: ' . var_export($realPath, true));
+        }
 
-        return Storage::disk('cloudinary')->url($path);
+        $result = cloudinary()->uploadFile($realPath, [
+            'folder' => 'aneris/' . $folder,
+        ]);
+
+        if (empty($result['secure_url'])) {
+            throw new \RuntimeException('Upload ke Cloudinary gagal: secure_url tidak ditemukan.');
+        }
+
+        return (string) $result['secure_url'];
     }
 
     public static function delete(?string $urlOrPublicId): void
@@ -28,7 +36,7 @@ class CloudinaryService
 
         if ($publicId) {
             try {
-                Storage::disk('cloudinary')->delete($publicId);
+                cloudinary()->destroy($publicId);
             } catch (\Throwable) {
             }
         }
@@ -37,10 +45,30 @@ class CloudinaryService
     public static function uploadBase64(string $base64, string $folder = 'general'): string
     {
         $data = base64_decode(preg_replace('/^data:\w+\/\w+;base64,/', '', $base64));
-        $path = 'aneris/' . $folder . '/' . uniqid() . '.jpg';
 
-        Storage::disk('cloudinary')->put($path, $data);
+        if ($data === false || $data === '') {
+            throw new \RuntimeException('Data base64 tidak valid.');
+        }
 
-        return Storage::disk('cloudinary')->url($path);
+        // Simpan sementara ke temp file, lalu upload ke Cloudinary
+        $tmpPath = tempnam(sys_get_temp_dir(), 'cloudinary_') . '.jpg';
+        file_put_contents($tmpPath, $data);
+
+        try {
+            $result = cloudinary()->uploadFile($tmpPath, [
+                'folder' => 'aneris/' . $folder,
+            ]);
+
+            if (empty($result['secure_url'])) {
+                throw new \RuntimeException('Upload base64 ke Cloudinary gagal.');
+            }
+
+            return (string) $result['secure_url'];
+        } finally {
+            // Hapus temp file apapun hasilnya
+            if (file_exists($tmpPath)) {
+                unlink($tmpPath);
+            }
+        }
     }
 }
