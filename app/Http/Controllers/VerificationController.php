@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use App\Models\PortfolioVerification;
 use App\Services\CloudinaryService;
 
@@ -64,7 +63,6 @@ class VerificationController extends Controller
         }
 
         // ── Validasi ──
-        // Pakai 'image' saja (tidak mimes) supaya kompatibel dengan DataTransfer API
         $request->validate([
             'portfolio_files'      => 'required|array|min:3|max:10',
             'portfolio_files.*'    => 'required|file|image|max:20480',
@@ -72,14 +70,14 @@ class VerificationController extends Controller
             'social_media_links.*' => 'nullable|url|max:500',
             'declaration'          => 'required|accepted',
         ], [
-            'portfolio_files.required'  => 'Upload minimal 3 file gambar portofolio.',
-            'portfolio_files.min'       => 'Upload minimal 3 file portofolio.',
-            'portfolio_files.max'       => 'Maksimal 10 file portofolio.',
-            'portfolio_files.*.image'   => 'Semua file harus berupa gambar.',
-            'portfolio_files.*.max'     => 'Ukuran tiap file maksimal 20MB.',
+            'portfolio_files.required'    => 'Upload minimal 3 file gambar portofolio.',
+            'portfolio_files.min'         => 'Upload minimal 3 file portofolio.',
+            'portfolio_files.max'         => 'Maksimal 10 file portofolio.',
+            'portfolio_files.*.image'     => 'Semua file harus berupa gambar.',
+            'portfolio_files.*.max'       => 'Ukuran tiap file maksimal 20MB.',
             'social_media_links.required' => 'Tambahkan minimal 1 link sosial media.',
-            'social_media_links.*.url'  => 'Format link tidak valid. Gunakan URL lengkap (https://...).',
-            'declaration.accepted'      => 'Kamu harus menyetujui pernyataan keaslian karya.',
+            'social_media_links.*.url'    => 'Format link tidak valid. Gunakan URL lengkap (https://...).',
+            'declaration.accepted'        => 'Kamu harus menyetujui pernyataan keaslian karya.',
         ]);
 
         // ── Upload ke Cloudinary ──
@@ -100,7 +98,15 @@ class VerificationController extends Controller
             fn($l) => !empty(trim($l ?? ''))
         ));
 
-        // Kalau request dari fetch/AJAX, return JSON redirect URL
+        // ── Simpan ke database ──
+        PortfolioVerification::create([
+            'artist_id'          => $user->user_id,
+            'status'             => 'pending',
+            'portfolio_files'    => $filePaths,
+            'social_media_links' => $socialLinks,
+        ]);
+
+        // ── Response ──
         if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             return response()->json([
                 'success'  => true,
