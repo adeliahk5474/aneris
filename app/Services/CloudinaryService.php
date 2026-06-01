@@ -2,65 +2,103 @@
 
 namespace App\Services;
 
-use Cloudinary\Cloudinary;
-use Cloudinary\Configuration\Configuration;
-use GuzzleHttp\Client;
-
 class CloudinaryService
 {
-    private static function client(): Cloudinary
-    {
-        // Download cacert.pem dari curl.se dan point ke sana,
-        // atau disable verify untuk development Windows
-        Configuration::instance([
-            'cloud' => [
-                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-                'api_key'    => env('CLOUDINARY_API_KEY'),
-                'api_secret' => env('CLOUDINARY_API_SECRET'),
-            ],
-            'url' => [
-                'secure' => true,
-            ],
-        ]);
-
-        return new Cloudinary();
-    }
-
+    /**
+     * Upload file, return secure URL.
+     * Pakai helper cloudinary() dari package cloudinary-laravel
+     * — sama persis dengan yang dipakai di artwork upload (sudah terbukti jalan).
+     *
+     * @param  \Illuminate\Http\UploadedFile  $file
+     * @param  string  $folder  Sub-folder di bawah 'aneris/'
+     * @return string  Secure URL
+     */
     public static function upload($file, string $folder = 'general'): string
     {
-        self::disableSslVerify();
+        $result = cloudinary()->upload(
+            $file->getRealPath(),
+            [
+                'folder'        => 'aneris/' . $folder,
+                'resource_type' => 'auto',
+                'transformation' => [
+                    'quality'      => 'auto',
+                    'fetch_format' => 'auto',
+                ],
+            ]
+        );
 
-        $cloudinary = self::client();
-
-        $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-            'folder'        => 'aneris/' . $folder,
-            'resource_type' => 'auto',
-        ]);
-
-        return $result['secure_url'];
+        return $result->getSecurePath();
     }
 
-    public static function delete(?string $url): void
+    /**
+     * Upload file, return [url, public_id].
+     *
+     * @param  \Illuminate\Http\UploadedFile  $file
+     * @param  string  $folder
+     * @return array{url: string, public_id: string}
+     */
+    public static function uploadWithId($file, string $folder = 'general'): array
     {
-        if (!$url || !str_contains($url, 'cloudinary.com')) return;
+        $result = cloudinary()->upload(
+            $file->getRealPath(),
+            [
+                'folder'        => 'aneris/' . $folder,
+                'resource_type' => 'auto',
+                'transformation' => [
+                    'quality'      => 'auto',
+                    'fetch_format' => 'auto',
+                ],
+            ]
+        );
 
-        self::disableSslVerify();
+        return [
+            'url'       => $result->getSecurePath(),
+            'public_id' => $result->getPublicId(),
+        ];
+    }
 
-        preg_match('/upload\/(?:v\d+\/)?(.+)\.[a-z]+$/i', $url, $matches);
-        if (!empty($matches[1])) {
-            $cloudinary = self::client();
-            $cloudinary->uploadApi()->destroy($matches[1]);
+    /**
+     * Upload dari path file langsung (bukan UploadedFile).
+     *
+     * @param  string  $filePath  Path absolut ke file
+     * @param  string  $folder
+     * @return array{url: string, public_id: string}
+     */
+    public static function uploadFromPath(string $filePath, string $folder = 'general'): array
+    {
+        $result = cloudinary()->upload(
+            $filePath,
+            [
+                'folder'        => 'aneris/' . $folder,
+                'resource_type' => 'auto',
+                'transformation' => [
+                    'quality'      => 'auto',
+                    'fetch_format' => 'auto',
+                ],
+            ]
+        );
+
+        return [
+            'url'       => $result->getSecurePath(),
+            'public_id' => $result->getPublicId(),
+        ];
+    }
+
+    /**
+     * Hapus file dari Cloudinary berdasarkan public_id.
+     *
+     * @param  string  $publicId
+     */
+    public static function destroy(string $publicId): void
+    {
+        if (!$publicId) return;
+
+        try {
+            cloudinary()->destroy($publicId);
+        } catch (\Throwable $e) {
+            \Log::warning('Cloudinary destroy failed: ' . $e->getMessage(), [
+                'public_id' => $publicId,
+            ]);
         }
-    }
-
-    private static function disableSslVerify(): void
-    {
-        // Hanya untuk development Windows — jangan pakai di production
-        stream_context_set_default([
-            'ssl' => [
-                'verify_peer'      => false,
-                'verify_peer_name' => false,
-            ],
-        ]);
     }
 }
