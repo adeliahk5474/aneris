@@ -57,6 +57,8 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\PortfolioVerification::class, 'artist_id', 'user_id');
     }
 
+    
+
     // 👇 Tambahkan fungsi ini supaya UUID dibuat otomatis
     protected static function boot()
     {
