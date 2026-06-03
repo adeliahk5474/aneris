@@ -16,10 +16,11 @@
         <form action="{{ route('order.send') }}" method="POST" enctype="multipart/form-data" id="sendForm">
             @csrf
             <input type="hidden" name="order_id" id="sendOrderId">
-            <div class="send-upload-area" onclick="document.getElementById('resultFile').click()">
+            {{-- Upload area: click handler di JS, BUKAN inline onclick --}}
+            <div class="send-upload-area" id="uploadArea">
                 <input type="file" name="result_file" id="resultFile"
                     accept="image/*,.pdf,.zip,.rar" required
-                    onchange="showFileName(this)">
+                    style="display:none;">
                 <i class="bi bi-cloud-arrow-up"></i>
                 <p id="uploadText">Klik untuk upload hasil kerja</p>
                 <p style="font-size:11px; color:var(--muted); margin-top:4px;">JPG, PNG, PDF, ZIP — Maks 20MB</p>
@@ -84,14 +85,29 @@
 $verif = $verification ?? null;
 $verifStatus = $verif?->status;
 $hasSubmission = $verif && in_array($verifStatus, ['pending','in_review','approved','rejected']);
-
-// Link Portfolio Verif: sudah submit → status, belum → create
 $verifLink = $hasSubmission ? route('verification.status') : route('verification.create');
+
+// Status label map — dipakai di Overview & Orders supaya konsisten
+$statusLabels = [
+'pending' => 'Pending',
+'paid' => 'Paid',
+'in_progress' => 'In Progress',
+'revision_requested' => 'Revision Requested',
+'revision' => 'Revising',
+'waiting_client' => 'Waiting Client',
+'completed' => 'Completed',
+'canceled' => 'Canceled',
+];
+
+// Phase steps — dipakai di kedua tab
+$phases = ['Sketching', 'Waiting', 'Coloring', 'Finalizing'];
 @endphp
 
 <div class="dashboard-layout">
 
-    {{-- SIDEBAR --}}
+    {{-- ════════════════════════════════
+         SIDEBAR
+    ═════════════════════════════════ --}}
     <aside class="dash-sidebar">
         <div class="sidebar-artist-row">
             <img src="{{ $artist->avatar ?? asset('images/default-avatar.png') }}"
@@ -107,7 +123,6 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
             </div>
         </div>
 
-        {{-- Tombol New Service --}}
         @if($artist->isVerifiedArtist())
         <a href="{{ route('upload.popup') }}" class="btn-new-service">
             <i class="bi bi-plus"></i> New Service
@@ -122,10 +137,12 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
 
         <nav class="sidebar-nav">
             <div class="nav-group-label">Studio</div>
-            <a class="sidebar-nav-item active" onclick="switchDashTab('overview',this)" href="javascript:void(0)">
+            <a class="sidebar-nav-item active" data-tab="overview"
+                onclick="switchDashTab('overview',this)" href="javascript:void(0)">
                 <i class="bi bi-grid-1x2"></i> Overview
             </a>
-            <a class="sidebar-nav-item" onclick="switchDashTab('orders',this)" href="javascript:void(0)">
+            <a class="sidebar-nav-item" data-tab="orders"
+                onclick="switchDashTab('orders',this)" href="javascript:void(0)">
                 <i class="bi bi-bag-check"></i> Orders
                 @if($pendingCommissions > 0)
                 <span style="margin-left:auto; background:var(--accent); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px;">
@@ -133,25 +150,19 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
                 </span>
                 @endif
             </a>
-            <a class="sidebar-nav-item" onclick="switchDashTab('listings',this)" href="javascript:void(0)">
+            <a class="sidebar-nav-item" data-tab="listings"
+                onclick="switchDashTab('listings',this)" href="javascript:void(0)">
                 <i class="bi bi-grid-3x3-gap"></i> Listings
             </a>
 
-            {{-- Portfolio Verif: selalu link ke halaman terpisah --}}
             <a class="sidebar-nav-item" href="{{ $verifLink }}">
                 <i class="bi bi-patch-check"></i> Portfolio Verif
                 @if($verifStatus === 'pending' || $verifStatus === 'in_review')
-                <span style="margin-left:auto; background:var(--yellow); color:#000; font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px;">
-                    Review
-                </span>
+                <span style="margin-left:auto; background:var(--yellow); color:#000; font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px;">Review</span>
                 @elseif($verifStatus === 'rejected')
-                <span style="margin-left:auto; background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px;">
-                    Gagal
-                </span>
+                <span style="margin-left:auto; background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px;">Gagal</span>
                 @elseif($verifStatus === 'approved')
-                <span style="margin-left:auto; background:var(--green); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px;">
-                    ✓
-                </span>
+                <span style="margin-left:auto; background:var(--green); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px;">✓</span>
                 @endif
             </a>
 
@@ -164,7 +175,9 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
 
     <main class="dash-main">
 
-        {{-- ============ OVERVIEW ============ --}}
+        {{-- ════════════════════════════════
+             TAB: OVERVIEW
+        ═════════════════════════════════ --}}
         <div id="dash-overview" class="dash-tab-panel">
 
             <div class="dash-page-header">
@@ -184,6 +197,7 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
                 @endif
             </div>
 
+            {{-- Stat cards --}}
             <div class="stat-grid">
                 <div class="stat-card">
                     <div class="stat-icon income"><i class="bi bi-cash-coin"></i></div>
@@ -214,6 +228,7 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
                 </div>
             </div>
 
+            {{-- Chart + quick actions --}}
             <div class="chart-row">
                 <div class="chart-card">
                     <div class="chart-header">
@@ -244,7 +259,6 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
                     </div>
                     @endif
 
-                    {{-- Verif CTA di Overview --}}
                     @if(!$artist->isVerifiedArtist())
                     <div class="tip-card" style="border-color:rgba(139,92,246,.3); background:var(--accent-dim); margin-top:4px;">
                         <div class="tip-title" style="color:var(--accent);">
@@ -260,9 +274,11 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
                 </div>
             </div>
 
+            {{-- Active Queue — layout SAMA dengan tab Orders --}}
             <div class="queue-header">
                 <div class="queue-title">Active Queue</div>
-                <span class="queue-view-all" onclick="switchDashTab('orders',document.querySelectorAll('.sidebar-nav-item')[1])">
+                <span class="queue-view-all"
+                    onclick="switchDashTab('orders', document.querySelector('.sidebar-nav-item[data-tab=orders]'))">
                     View All Orders
                 </span>
             </div>
@@ -270,36 +286,77 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
             <div class="queue-list">
                 @forelse($activeForOverview as $order)
                 @php
+                $curPhase = match($order->phase ?? 'sketch') { 'sketch'=>0,'coloring'=>2,'rendering'=>3,'final'=>4,default=>0 };
                 $maxRevisions = $order->service->max_revisions ?? 3;
                 $usedRevisions = $order->revision_count ?? 0;
+                $remainRevisions = max(0, $maxRevisions - $usedRevisions);
+                $itemClass = match($order->status) {
+                'pending','paid' => 'pending-item',
+                'waiting_client' => 'waiting-item',
+                'revision' => 'revision-item',
+                'revision_requested' => 'revision-requested-item',
+                default => '',
+                };
                 @endphp
-                <div class="queue-item {{ in_array($order->status,['pending','paid']) ? 'pending-item' : ($order->status==='waiting_client' ? 'waiting-item' : ($order->status==='revision_requested' ? 'revision-requested-item' : ($order->status==='revision' ? 'revision-item' : ''))) }}">
+
+                <div class="queue-item {{ $itemClass }}" data-status="{{ $order->status }}">
                     <img src="{{ $order->service->image_url ?? asset('images/default-thumb.png') }}"
                         class="queue-thumb" alt="">
+
                     <div class="queue-info">
                         <div class="queue-service-name">{{ $order->service->title ?? 'Commission' }}</div>
                         <div class="queue-meta">
                             <span>{{ $order->client->name ?? '—' }}</span>
                             <span class="status-badge badge-{{ $order->status }}">
-                                {{ [
-                                    'pending'=>'Pending','paid'=>'Paid','in_progress'=>'In Progress',
-                                    'revision_requested'=>'Revision Requested','revision'=>'Revising',
-                                    'waiting_client'=>'Waiting Client','completed'=>'Completed','canceled'=>'Canceled'
-                                ][$order->status] ?? ucfirst($order->status) }}
+                                {{ $statusLabels[$order->status] ?? ucfirst($order->status) }}
+                                @if($order->phase && in_array($order->status,['in_progress','revision','waiting_client']))
+                                — {{ ucfirst($order->phase) }}
+                                @endif
                             </span>
                         </div>
-                        @if($usedRevisions > 0 || $maxRevisions > 0)
-                        <div class="revision-progress">
+
+                        @if($maxRevisions > 0)
+                        <div class="revision-progress" style="margin-top:6px;">
                             @for($ri=0;$ri<$maxRevisions;$ri++)
-                                <div class="revision-dot {{ $ri < $usedRevisions ? 'used' : 'avail' }}">
+                                <div class="revision-dot {{ $ri < $usedRevisions ? 'used' : 'avail' }}"
+                                title="{{ $ri < $usedRevisions ? 'Terpakai' : 'Tersisa' }}">
                         </div>
                         @endfor
-                        <span class="revision-label">{{ $usedRevisions }}/{{ $maxRevisions }} revisi</span>
+                        <span class="revision-label">
+                            {{ $usedRevisions }}/{{ $maxRevisions }} revisi
+                            @if($remainRevisions === 0)
+                            <span style="color:var(--red); font-weight:700;">· Habis</span>
+                            @else
+                            · {{ $remainRevisions }} sisa
+                            @endif
+                        </span>
                     </div>
                     @endif
+
+                    <div style="font-size:11px; color:var(--muted); margin-top:4px;">
+                        Rp {{ number_format($order->total_price,0,',','.') }} ·
+                        {{ $order->created_at->format('d M Y') }}
+                    </div>
                 </div>
+
+                {{-- Phase tracker — sama persis dengan Orders --}}
+                <div class="phase-track">
+                    @foreach($phases as $pi => $ph)
+                    <div class="phase-step {{ $pi < $curPhase ? 'done' : ($pi === $curPhase ? 'active' : '') }}">
+                        <div class="phase-dot"></div>
+                        <div class="phase-label">{{ $ph }}</div>
+                    </div>
+                    @endforeach
+                </div>
+
                 <div class="queue-actions">
-                    @if($order->status === 'revision_requested')
+                    @if(in_array($order->status,['pending','paid']))
+                    <form action="{{ route('order.accept') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="order_id" value="{{ $order->order_id }}">
+                        <button type="submit" class="qa-btn accept"><i class="bi bi-check-lg"></i> Terima</button>
+                    </form>
+                    @elseif($order->status === 'revision_requested')
                     <form action="{{ route('order.revision') }}" method="POST">
                         @csrf
                         <input type="hidden" name="order_id" value="{{ $order->order_id }}">
@@ -309,19 +366,19 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
                         </button>
                     </form>
                     @elseif(in_array($order->status,['in_progress','revision']))
-                    <button class="qa-btn send" onclick="openSendModal('{{ $order->order_id }}','{{ $order->phase ?? 'sketch' }}')">
+                    <button class="qa-btn send"
+                        onclick="openSendModal('{{ $order->order_id }}','{{ $order->phase ?? 'sketch' }}')">
                         <i class="bi bi-upload"></i> Kirim File
                     </button>
                     @elseif($order->status === 'waiting_client')
                     <span class="qa-btn waiting-state"><i class="bi bi-hourglass-split"></i> Menunggu</span>
-                    @elseif(in_array($order->status,['pending','paid']))
-                    <form action="{{ route('order.accept') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="order_id" value="{{ $order->order_id }}">
-                        <button type="submit" class="qa-btn accept"><i class="bi bi-check-lg"></i> Terima</button>
-                    </form>
                     @endif
                 </div>
+
+                <a href="{{ route('order.detail',$order->order_id) }}"
+                    class="queue-detail-link" title="Lihat Detail">
+                    <i class="bi bi-arrow-right" style="font-size:14px;"></i>
+                </a>
             </div>
             @empty
             <div style="text-align:center; padding:40px; color:var(--muted); font-size:14px;">
@@ -333,7 +390,10 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
 
 </div>{{-- /overview --}}
 
-{{-- ============ ORDERS ============ --}}
+
+{{-- ════════════════════════════════
+             TAB: ORDERS
+        ═════════════════════════════════ --}}
 <div id="dash-orders" class="dash-tab-panel" style="display:none;">
 
     <div class="dash-page-header">
@@ -344,7 +404,16 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
     </div>
 
     <div class="filter-chips">
-        @foreach(['all'=>'Semua','pending'=>'Pending','in_progress'=>'In Progress','revision_requested'=>'Revision Req','revision'=>'Revising','waiting_client'=>'Waiting Client','completed'=>'Completed','canceled'=>'Dibatalkan'] as $st => $lbl)
+        @foreach([
+        'all' => 'Semua',
+        'pending' => 'Pending',
+        'in_progress' => 'In Progress',
+        'revision_requested' => 'Revision Req',
+        'revision' => 'Revising',
+        'waiting_client' => 'Waiting Client',
+        'completed' => 'Completed',
+        'canceled' => 'Dibatalkan',
+        ] as $st => $lbl)
         <div class="chip {{ $st==='all'?'active':'' }}" onclick="filterOrders('{{ $st }}',this)">
             {{ $lbl }}
             @if($st==='pending' && $pendingCommissions > 0)
@@ -364,10 +433,10 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
     <div class="queue-list" id="orders-list">
         @forelse($incomingOrders as $order)
         @php
-        $phases = ['Sketching','Waiting','Coloring','Finalizing'];
-        $curPhase = match($order->phase ?? 'sketch') {
-        'sketch' => 0, 'coloring' => 2, 'rendering' => 3, 'final' => 4, default => 0,
-        };
+        $curPhase = match($order->phase ?? 'sketch') { 'sketch'=>0,'coloring'=>2,'rendering'=>3,'final'=>4,default=>0 };
+        $maxRevisions = $order->service->max_revisions ?? 3;
+        $usedRevisions = $order->revision_count ?? 0;
+        $remainRevisions = max(0, $maxRevisions - $usedRevisions);
         $itemClass = match($order->status) {
         'pending','paid' => 'pending-item',
         'waiting_client' => 'waiting-item',
@@ -375,14 +444,6 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
         'revision_requested' => 'revision-requested-item',
         default => '',
         };
-        $statusLabels = [
-        'pending'=>'Pending','paid'=>'Paid','in_progress'=>'In Progress',
-        'revision_requested'=>'Revision Requested','revision'=>'Revising',
-        'waiting_client'=>'Waiting Client','completed'=>'Completed','canceled'=>'Canceled'
-        ];
-        $maxRevisions = $order->service->max_revisions ?? 3;
-        $usedRevisions = $order->revision_count ?? 0;
-        $remainRevisions = max(0, $maxRevisions - $usedRevisions);
         $artistReviewed = $order->reviews()->where('reviewer_type','artist')->exists();
         @endphp
 
@@ -500,7 +561,10 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
 
 </div>{{-- /orders --}}
 
-{{-- ============ LISTINGS ============ --}}
+
+{{-- ════════════════════════════════
+             TAB: LISTINGS
+        ═════════════════════════════════ --}}
 <div id="dash-listings" class="dash-tab-panel" style="display:none;">
     <div class="dash-page-header">
         <div>
@@ -528,7 +592,9 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
                     style="width:100%; height:100%; object-fit:cover;" alt="">
             </div>
             <div style="padding:14px;">
-                <div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ $svc->title }}</div>
+                <div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    {{ $svc->title }}
+                </div>
                 <div style="font-size:12px; color:var(--muted); margin-bottom:2px;">
                     {{ $svc->category->name ?? '' }} · Rp {{ number_format($svc->base_price ?? 0,0,',','.') }}
                 </div>
@@ -536,8 +602,8 @@ $verifLink = $hasSubmission ? route('verification.status') : route('verification
                     Max revisi: <strong style="color:var(--text);">{{ $svc->max_revisions ?? 3 }}x</strong>
                 </div>
                 <span style="font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; display:inline-block; margin-bottom:10px;
-                                    background:{{ $svc->status==='active' ? 'var(--green-dim)' : 'var(--surface2)' }};
-                                    color:{{ $svc->status==='active' ? 'var(--green)' : 'var(--muted)' }};">
+                            background:{{ $svc->status==='active' ? 'var(--green-dim)' : 'var(--surface2)' }};
+                            color:{{ $svc->status==='active' ? 'var(--green)' : 'var(--muted)' }};">
                     {{ strtoupper($svc->status) }}
                 </span>
                 <div style="display:flex; gap:8px;">

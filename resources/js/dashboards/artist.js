@@ -60,18 +60,54 @@ document.addEventListener('DOMContentLoaded', () => {
     ['sendModal', 'reviewModal'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('click', e => {
-            if (e.target === el) el.classList.remove('open');
+            if (e.target === el) closeModal(id);
         });
     });
+
+    // ── File input change listener (single, no duplicate) ──
+    const resultFile = document.getElementById('resultFile');
+    if (resultFile) {
+        resultFile.addEventListener('change', function () {
+            const name = this.files[0]?.name || null;
+            const uploadText = document.getElementById('uploadText');
+            if (uploadText) {
+                uploadText.textContent = name || 'Klik untuk upload hasil kerja';
+                uploadText.className = name ? 'file-selected' : '';
+            }
+        });
+    }
+
+    // ── Upload area click → trigger file input ──────
+    const uploadArea = document.getElementById('uploadArea');
+    if (uploadArea) {
+        uploadArea.addEventListener('click', () => {
+            const fi = document.getElementById('resultFile');
+            if (fi) fi.click();
+        });
+    }
 
     // ── Auto-open tab dari URL query ?tab=xxx ──────
     const params  = new URLSearchParams(window.location.search);
     const tabName = params.get('tab');
     if (tabName) {
-        const navItem = document.querySelector(`.sidebar-nav-item[onclick*="'${tabName}'"]`);
+        const navItem = document.querySelector(`.sidebar-nav-item[data-tab="${tabName}"]`);
         switchDashTab(tabName, navItem || null);
     }
 });
+
+
+/* ════════════════════════════════════════
+   MODAL HELPERS
+════════════════════════════════════════ */
+function openModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('open');
+}
+
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+}
 
 
 /* ════════════════════════════════════════
@@ -116,26 +152,29 @@ function openSendModal(orderId, phase) {
     document.getElementById('sendOrderId').value = orderId;
     document.getElementById('sendModalSub').textContent =
         'Upload hasil ' + (phase === 'sketch' ? 'Sketch' : 'Coloring') + ' untuk dikirim ke client';
-    document.getElementById('sendModal').classList.add('open');
-}
 
-function closeSendModal() {
-    document.getElementById('sendModal').classList.remove('open');
-    const fileInput = document.getElementById('resultFile');
-    if (fileInput) fileInput.value = '';
+    // Reset file input & label
+    const fileInput  = document.getElementById('resultFile');
     const uploadText = document.getElementById('uploadText');
+    if (fileInput)  fileInput.value = '';
     if (uploadText) {
         uploadText.textContent = 'Klik untuk upload hasil kerja';
         uploadText.className   = '';
     }
+
+    openModal('sendModal');
 }
 
-function showFileName(input) {
-    const name       = input.files[0]?.name || 'Klik untuk upload hasil kerja';
+function closeSendModal() {
+    closeModal('sendModal');
+
+    // Reset file input & label
+    const fileInput  = document.getElementById('resultFile');
     const uploadText = document.getElementById('uploadText');
+    if (fileInput)  fileInput.value = '';
     if (uploadText) {
-        uploadText.textContent = name;
-        uploadText.className   = 'file-selected';
+        uploadText.textContent = 'Klik untuk upload hasil kerja';
+        uploadText.className   = '';
     }
 }
 
@@ -146,21 +185,20 @@ function showFileName(input) {
 function openReviewModal(orderId, clientName) {
     document.getElementById('reviewOrderId').value = orderId;
     document.getElementById('reviewModalSub').textContent = 'Beri penilaian untuk ' + clientName;
-    document.getElementById('reviewModal').classList.add('open');
+    openModal('reviewModal');
 }
 
 function closeReviewModal() {
-    document.getElementById('reviewModal').classList.remove('open');
+    closeModal('reviewModal');
 }
 
 
 /* ════════════════════════════════════════
    GLOBAL EXPORTS
 ════════════════════════════════════════ */
-window.switchDashTab   = switchDashTab;
-window.filterOrders    = filterOrders;
-window.openSendModal   = openSendModal;
-window.closeSendModal  = closeSendModal;
-window.showFileName    = showFileName;
-window.openReviewModal = openReviewModal;
+window.switchDashTab    = switchDashTab;
+window.filterOrders     = filterOrders;
+window.openSendModal    = openSendModal;
+window.closeSendModal   = closeSendModal;
+window.openReviewModal  = openReviewModal;
 window.closeReviewModal = closeReviewModal;
