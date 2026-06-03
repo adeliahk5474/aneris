@@ -48,7 +48,7 @@ class ProfileController extends Controller
             $avgRevision  = $reviewCount > 0 ? $reviewsReceived->avg('rating_revision') : null;
 
             // ── Good Client: rata-rata overall ≥ 4.0 dari minimal 1 review
-            if ($reviewCount >= 1 && $avgRating >= 4.0) {
+            if ($reviewCount >= 5 && $avgRating >= 4.0) {
                 $clientBadges[] = [
                     'icon'  => 'bi-patch-check-fill',
                     'label' => 'Good Client',
@@ -57,7 +57,7 @@ class ProfileController extends Controller
             }
 
             // ── Trusted Buyer: sudah 5+ order DAN rating rata-rata ≥ 4.0
-            if ($totalOrders >= 5 && ($avgRating === null || $avgRating >= 4.0)) {
+            if ($totalOrders >= 5 && $reviewCount >= 5 && $avgRating >= 4.0) {
                 $clientBadges[] = [
                     'icon'  => 'bi-bag-check-fill',
                     'label' => 'Trusted Buyer',
@@ -67,7 +67,7 @@ class ProfileController extends Controller
 
             // ── Fast Response: badge attitude ≥ 4.5 (artist nilai respon client tinggi)
             //    atau tidak ada review negatif soal komunikasi
-            if ($reviewCount === 0 || ($avgAttitude !== null && $avgAttitude >= 4.0)) {
+            if ($reviewCount >= 5 && $avgAttitude !== null && $avgAttitude >= 4.0) {
                 $clientBadges[] = [
                     'icon'  => 'bi-lightning-charge-fill',
                     'label' => 'Fast Response',
@@ -76,7 +76,7 @@ class ProfileController extends Controller
             }
 
             // ── Clear Brief: rating_brief rata-rata ≥ 4.0
-            if ($reviewCount === 0 || ($avgBrief !== null && $avgBrief >= 4.0)) {
+            if ($reviewCount >= 5 && $avgBrief !== null && $avgBrief >= 4.0) {
                 // Pastikan tidak ada excess revision yang banyak
                 $excessRevision = $user->ordersAsClient()->where('revision_count', '>', 3)->count();
                 if ($excessRevision === 0 || $totalOrders === 0) {
