@@ -1,4 +1,3 @@
-/* ─── MODAL ──────────────────────────── */
 function openModal(id) {
     document.getElementById(id).classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -112,3 +111,4 @@ window.closeModal = closeModal;
 window.showFileName = showFileName;
 window.setOverallStar = setOverallStar;
 window.setMiniStar = setMiniStar;
+
