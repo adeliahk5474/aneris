@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PortfolioVerification;
-use App\Services\CloudinaryService;
+use App\Services\StorageService;
 
 class VerificationController extends Controller
 {
@@ -83,7 +83,7 @@ class VerificationController extends Controller
         // ── Upload ke Cloudinary ──
         $filePaths = [];
         foreach ($request->file('portfolio_files') as $file) {
-            $url = CloudinaryService::upload($file, 'verifications/' . $user->user_id);
+            $url = StorageService::upload($file, 'verifications/' . $user->user_id);
             $filePaths[] = [
                 'path' => $url,
                 'name' => $file->getClientOriginalName(),

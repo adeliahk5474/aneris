@@ -161,7 +161,7 @@ class ChatController extends Controller
 
         $imageUrl = null;
         if ($request->hasFile('image')) {
-            $imageUrl = \App\Services\CloudinaryService::upload(
+            $imageUrl = \App\Services\StorageService::upload(
                 $request->file('image'),
                 'chats'
             );

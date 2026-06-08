@@ -43,7 +43,7 @@ class UploadController extends Controller
             'category_id' => 'nullable|exists:categories,category_id',
         ]);
 
-        $url = \App\Services\CloudinaryService::upload(
+        $url = \App\Services\StorageService::upload(
             $request->file('image'),
             'artworks'
         );
@@ -86,7 +86,7 @@ class UploadController extends Controller
             'status'         => 'nullable|in:active,inactive',
         ]);
 
-        $coverUrl = \App\Services\CloudinaryService::upload(
+        $coverUrl = \App\Services\StorageService::upload(
             $request->file('image'),
             'commissions'
         );
@@ -95,7 +95,7 @@ class UploadController extends Controller
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $gFile) {
                 if (count($galleryUrls) >= 3) break;
-                $galleryUrls[] = \App\Services\CloudinaryService::upload(
+                $galleryUrls[] = \App\Services\StorageService::upload(
                     $gFile,
                     'commissions/gallery'
                 );
