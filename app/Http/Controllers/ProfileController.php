@@ -180,8 +180,8 @@ class ProfileController extends Controller
         $user->name = $request->name;
 
         if ($request->hasFile('profile_picture')) {
-            \App\Services\CloudinaryService::delete($user->avatar);
-            $user->avatar = \App\Services\CloudinaryService::upload(
+            \App\Services\StorageService::delete($user->avatar);
+            $user->avatar = \App\Services\StorageService::upload(
                 $request->file('profile_picture'),
                 'avatars'
             );

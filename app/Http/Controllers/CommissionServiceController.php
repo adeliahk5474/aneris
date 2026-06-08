@@ -136,8 +136,8 @@ class CommissionServiceController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            \App\Services\CloudinaryService::delete($service->image_url);
-            $service->image_url = \App\Services\CloudinaryService::upload(
+            \App\Services\StorageService::delete($service->image_url);
+            $service->image_url = \App\Services\StorageService::upload(
                 $request->file('image'),
                 'commissions'
             );
@@ -147,7 +147,7 @@ class CommissionServiceController extends Controller
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $file) {
                 if (count($gallery) >= 3) break;
-                $gallery[] = \App\Services\CloudinaryService::upload(
+                $gallery[] = \App\Services\StorageService::upload(
                     $file,
                     'commissions/gallery'
                 );
