@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAT Aneris Art Platform</title>
+<style>
+  :root{
+    --violet-900:#2E1065;
+    --violet-700:#5B21B6;
+    --violet-600:#7C3AED;
+    --violet-400:#A78BFA;
+    --violet-100:#EDE9FE;
+    --violet-50:#F7F5FF;
+    --ink:#1E1A2B;
+    --muted:#6B6480;
+    --line:#E6E1F5;
+    --ok:#16A34A;
+    --ok-bg:#DCFCE7;
+    --bad:#DC2626;
+    --bad-bg:#FEE2E2;
+    --paper:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--violet-50);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding-bottom:80px;
+  }
+  .top{
+    position:sticky; top:0; z-index:50;
+    background:linear-gradient(135deg,var(--violet-900),var(--violet-700));
+    color:white;
+    padding:18px 20px 14px;
+    box-shadow:0 4px 14px rgba(46,16,101,.25);
+  }
+  .top h1{margin:0 0 2px; font-size:19px; font-weight:700; letter-spacing:.2px;}
+  .top p{margin:0; font-size:12.5px; color:var(--violet-100); opacity:.9;}
+  .progress-wrap{
+    display:flex; align-items:center; gap:12px; margin-top:12px;
+  }
+  .ring{
+    position:relative; width:46px; height:46px; flex:0 0 auto;
+  }
+  .ring svg{transform:rotate(-90deg);}
+  .ring circle{fill:none; stroke-width:5;}
+  .ring .bg{stroke:rgba(255,255,255,.25);}
+  .ring .fg{stroke:#ffffff; stroke-linecap:round; transition:stroke-dashoffset .35s ease;}
+  .ring-label{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700;
+  }
+  .bar-track{
+    flex:1; height:8px; background:rgba(255,255,255,.22); border-radius:99px; overflow:hidden;
+  }
+  .bar-fill{
+    height:100%; width:0%; background:#ffffff; border-radius:99px; transition:width .35s ease;
+  }
+  .bar-text{font-size:11.5px; color:var(--violet-100); white-space:nowrap;}
+
+  .wrap{max-width:640px; margin:0 auto; padding:18px 16px;}
+
+  .card{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:16px 16px; margin-bottom:14px;
+    box-shadow:0 1px 2px rgba(46,16,101,.04);
+  }
+  .intro p{font-size:13.5px; line-height:1.55; color:#463F5C; margin:6px 0;}
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:12.5px; font-weight:600; color:var(--violet-700); margin-bottom:5px;}
+  .field input[type=text], .field input[type=date]{
+    width:100%; padding:9px 11px; border:1.5px solid var(--line); border-radius:9px;
+    font-size:14px; color:var(--ink); background:var(--violet-50);
+  }
+  .field input:focus{outline:2px solid var(--violet-400); outline-offset:1px;}
+  .pill-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .pill{
+    padding:8px 14px; border-radius:99px; border:1.5px solid var(--line); background:var(--violet-50);
+    font-size:13px; cursor:pointer; user-select:none; color:var(--ink); font-weight:600;
+  }
+  .pill.active{background:var(--violet-600); border-color:var(--violet-600); color:white;}
+
+  .module-header{
+    display:flex; align-items:center; gap:10px; cursor:pointer; padding:2px 0;
+  }
+  .module-badge{
+    width:30px; height:30px; border-radius:9px; background:var(--violet-600); color:white;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex:0 0 auto;
+  }
+  .module-title{font-size:14.5px; font-weight:700; color:var(--violet-900); flex:1;}
+  .module-count{font-size:11.5px; color:var(--muted); font-weight:600; white-space:nowrap;}
+  .chev{transition:transform .2s ease; color:var(--violet-400); flex:0 0 auto;}
+  .module-body{max-height:0; overflow:hidden; transition:max-height .3s ease;}
+  .module-body.open{max-height:4000px;}
+
+  .item{padding:12px 0; border-top:1px solid var(--line);}
+  .item:first-of-type{border-top:none; padding-top:14px;}
+  .item-no{font-size:11px; font-weight:700; color:var(--violet-400);}
+  .item-title{font-size:13.5px; font-weight:600; margin:2px 0 3px; line-height:1.4;}
+  .item-steps{font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:8px;}
+  .toggle-row{display:flex; gap:8px; margin-bottom:8px;}
+  .toggle{
+    flex:1; padding:8px 0; text-align:center; border-radius:9px; border:1.5px solid var(--line);
+    font-size:12.5px; font-weight:700; cursor:pointer; background:var(--violet-50); color:var(--muted);
+  }
+  .toggle.ok.active{background:var(--ok-bg); border-color:var(--ok); color:var(--ok);}
+  .toggle.bad.active{background:var(--bad-bg); border-color:var(--bad); color:var(--bad);}
+  .note-input{
+    width:100%; padding:7px 10px; border:1.5px solid var(--line); border-radius:8px;
+    font-size:12.5px; background:var(--violet-50); color:var(--ink);
+  }
+  .note-input::placeholder{color:#9992B0;}
+
+  .likert-item{padding:12px 0; border-top:1px solid var(--line);}
+  .likert-item:first-of-type{border-top:none; padding-top:2px;}
+  .likert-text{font-size:13px; font-weight:600; margin-bottom:8px; line-height:1.4;}
+  .likert-row{display:flex; gap:6px;}
+  .likert-btn{
+    flex:1; padding:8px 0; text-align:center; border-radius:8px; border:1.5px solid var(--line);
+    font-size:13px; font-weight:700; cursor:pointer; background:var(--violet-50); color:var(--muted);
+  }
+  .likert-btn.active{background:var(--violet-600); border-color:var(--violet-600); color:white;}
+  .likert-scale-label{display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:4px;}
+
+  .conclusion-opt{
+    display:flex; align-items:center; gap:10px; padding:11px 12px; border:1.5px solid var(--line);
+    border-radius:10px; margin-bottom:8px; cursor:pointer; font-size:13px; font-weight:600;
+  }
+  .conclusion-opt.active{border-color:var(--violet-600); background:var(--violet-100); color:var(--violet-900);}
+  .dot{width:16px; height:16px; border-radius:50%; border:2px solid var(--line); flex:0 0 auto;}
+  .conclusion-opt.active .dot{border-color:var(--violet-600); background:var(--violet-600); box-shadow:inset 0 0 0 3px white;}
+
+  textarea.note-input{min-height:64px; resize:vertical; font-family:inherit;}
+
+  .footer-actions{
+    position:fixed; bottom:0; left:0; right:0; background:white; border-top:1px solid var(--line);
+    padding:10px 16px; display:flex; gap:10px; z-index:40; box-shadow:0 -4px 14px rgba(46,16,101,.08);
+  }
+  .btn{
+    flex:1; padding:12px 0; border-radius:10px; border:none; font-size:13.5px; font-weight:700; cursor:pointer;
+  }
+  .btn-primary{background:var(--violet-600); color:white;}
+  .btn-secondary{background:var(--violet-100); color:var(--violet-700);}
+
+  @media print{
+    *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact; }
+    .top{position:static; box-shadow:none;}
+    .footer-actions{display:none !important;}
+    .module-body{max-height:none !important;}
+    .module-header{cursor:default;}
+    .chev{display:none;}
+    .card{break-inside:avoid-page; page-break-inside:avoid;}
+    .item{break-inside:avoid-page; page-break-inside:avoid;}
+    .likert-item{break-inside:avoid-page; page-break-inside:avoid;}
+    body{padding-bottom:0; background:white;}
+    .wrap{max-width:100%;}
+  }
+
+  .section-title{font-size:13px; font-weight:700; color:var(--violet-700); text-transform:uppercase; letter-spacing:.4px; margin:0 0 10px;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>UAT — Aneris Art Platform</h1>
+  <p>Checklist pengujian sederhana · aneris.my.id</p>
+  <div class="progress-wrap">
+    <div class="ring">
+      <svg width="46" height="46" viewBox="0 0 46 46">
+        <circle class="bg" cx="23" cy="23" r="19"></circle>
+        <circle class="fg" id="ringFg" cx="23" cy="23" r="19" stroke-dasharray="119.4" stroke-dashoffset="119.4"></circle>
+      </svg>
+      <div class="ring-label" id="ringLabel">0%</div>
+    </div>
+    <div style="flex:1;">
+      <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+      <div class="bar-text" id="barText">0 / 0 terisi</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="card intro">
+    <p><strong>Petunjuk singkat:</strong> lakukan tiap langkah pada sistem, lalu tap <strong>Sesuai</strong> atau <strong>Tidak</strong>. Catatan bersifat opsional.</p>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Identitas Penguji</div>
+    <div class="field">
+      <label>Nama Lengkap</label>
+      <input type="text" id="respName" placeholder="Nama penguji">
+    </div>
+    <div class="field">
+      <label>Peran saat Pengujian</label>
+      <div class="pill-row" id="rolePicker">
+        <div class="pill" data-val="Artist">Artist</div>
+        <div class="pill" data-val="Client">Client</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Perangkat / Browser</label>
+      <input type="text" id="respDevice" placeholder="cth. Chrome, Android">
+    </div>
+    <div class="field">
+      <label>Tanggal Pengujian</label>
+      <input type="date" id="respDate">
+    </div>
+  </div>
+
+  <div id="modulesRoot"></div>
+
+  <div class="card">
+    <div class="section-title">Kuesioner Kepuasan Pengguna</div>
+    <p style="font-size:12px;color:var(--muted);margin-top:-4px;">1 = Sangat Tidak Setuju &nbsp;·&nbsp; 5 = Sangat Setuju</p>
+    <div id="likertRoot"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Kesimpulan Pengujian</div>
+    <div id="conclusionRoot"></div>
+    <div class="field" style="margin-top:10px;">
+      <label>Catatan / Masukan Tambahan</label>
+      <textarea class="note-input" id="finalNotes" placeholder="Opsional..."></textarea>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer-actions">
+  <button class="btn btn-secondary" onclick="copySummary()">Salin Ringkasan</button>
+  <button class="btn btn-primary" onclick="window.print()">Cetak / Simpan PDF</button>
+</div>
+
+<script>
+const modules = [
+  {code:"A", name:"Autentikasi & Akun Pengguna", items:[
+    {t:"Registrasi akun baru", s:"Sign Up → isi nama, email, password → pilih peran → submit", e:"Akun dibuat, notifikasi sukses, diarahkan ke login"},
+    {t:"Login dengan akun terdaftar", s:"Masuk /auth → isi email & password → Sign In", e:"Berhasil login, masuk ke halaman utama sesuai peran"},
+    {t:"Login dengan password salah", s:"Email benar, password salah → Sign In", e:"Muncul pesan error, login ditolak"},
+    {t:"Logout dari akun", s:"Menu profil → Logout", e:"Sesi berakhir, kembali ke halaman utama sebagai guest"},
+    {t:"Edit profil pengguna", s:"Profil → Edit Profile → ubah nama/bio/avatar → simpan", e:"Perubahan tersimpan dan terlihat di profil"},
+  ]},
+  {code:"B", name:"Explore & Pencarian Jasa Komisi", items:[
+    {t:"Menjelajah katalog di halaman utama", s:"Buka aneris.my.id, amati Top Rated / Most Liked / Rising Artists", e:"Daftar jasa tampil lengkap dengan gambar, harga, status OPEN"},
+    {t:"Mencari jasa dengan kata kunci", s:"/explore → ketik kata kunci (cth. \"anime\") → Enter", e:"Hasil relevan dengan kata kunci"},
+    {t:"Memfilter berdasarkan kategori", s:"/explore → pilih kategori (cth. Chibi Art)", e:"Hanya jasa kategori terkait yang tampil"},
+    {t:"Mengurutkan hasil", s:"Klik \"See all\" pada Top Rated / Most Liked / Rising Artists", e:"Daftar terurut sesuai kriteria"},
+    {t:"Menyukai (like) sebuah jasa", s:"Buka detail jasa → klik ikon like", e:"Jika belum login diarahkan ke login; jika sudah, jumlah like bertambah"},
+  ]},
+  {code:"C", name:"Detail Jasa Komisi", items:[
+    {t:"Melihat detail lengkap jasa komisi", s:"Klik kartu jasa dari Explore/halaman utama", e:"Deskripsi, galeri, harga, estimasi hari, batas revisi, add-on tampil"},
+    {t:"Melihat status antrian (Queue) Artist", s:"Halaman detail jasa → bagian \"Artist Queue\"", e:"Slot terisi & slot tersisa tampil akurat"},
+    {t:"Melihat ulasan (review) jasa", s:"Scroll ke bagian Review", e:"Ulasan & rating tampil, atau pesan \"Belum ada review\""},
+    {t:"Melihat profil Artist dari halaman jasa", s:"Klik nama/avatar Artist", e:"Diarahkan ke halaman profil Artist"},
+    {t:"Memulai chat dengan Artist", s:"Klik tombol \"Chat Artist\"", e:"Jika sudah login, diarahkan ke halaman chat"},
+  ]},
+  {code:"D", name:"Pemesanan & Checkout (Client)", items:[
+    {t:"Memilih add-on saat memesan", s:"Centang satu/lebih opsi Layanan Tambahan", e:"Total harga (Starting from) diperbarui otomatis"},
+    {t:"Melakukan order dengan brief", s:"\"Order Sekarang\" → isi brief → lampirkan referensi → checkout", e:"Order dibuat, ringkasan pembayaran sesuai add-on"},
+    {t:"Order saat slot antrian penuh", s:"Pilih jasa slot penuh → coba order", e:"Order dicegah / tombol nonaktif dengan keterangan penuh"},
+    {t:"Melihat riwayat pesanan (order history)", s:"Profil/dashboard → tab pesanan/orders", e:"Seluruh transaksi tampil beserta status"},
+  ]},
+  {code:"E", name:"Pembayaran", items:[
+    {t:"Melakukan pembayaran via Midtrans Snap", s:"Checkout → \"Bayar Sekarang\" → pilih metode → selesaikan", e:"Popup Snap muncul, status order jadi \"paid\""},
+    {t:"Melihat status \"Aneris Protected\"", s:"Perhatikan keterangan keamanan pembayaran", e:"Keterangan dana ditahan aman tampil jelas"},
+    {t:"Membatalkan proses pembayaran", s:"Tutup/batalkan popup Midtrans sebelum selesai", e:"Order tidak jadi paid, bisa coba bayar ulang"},
+  ]},
+  {code:"F", name:"Dashboard & Pengelolaan Jasa (Artist)", items:[
+    {t:"Membuat jasa komisi baru", s:"Dashboard → Tambah Jasa → isi judul, harga, estimasi, slot, add-on → simpan", e:"Jasa baru muncul di Explore & profil Artist"},
+    {t:"Mengunggah karya portofolio", s:"Dashboard/profil → unggah karya → isi caption & kategori", e:"Karya tersimpan dan tampil di galeri profil"},
+    {t:"Menerima pesanan baru", s:"Order berstatus \"paid\" → klik Accept", e:"Status jadi in_progress, deadline tampil"},
+    {t:"Menolak pesanan baru", s:"Order berstatus \"paid\" → klik Reject", e:"Status jadi canceled, Client dapat notifikasi"},
+    {t:"Memantau ringkasan pendapatan", s:"Buka dashboard utama Artist", e:"Total pendapatan, pesanan aktif, rating rata-rata tampil benar"},
+  ]},
+  {code:"G", name:"Progress Tracking (Fitur Unggulan)", items:[
+    {t:"Artist memperbarui fase pengerjaan", s:"Order aktif → ubah fase sketch → coloring → final", e:"Fase tersimpan & tampil sebagai status terkini"},
+    {t:"Client memantau progres real-time", s:"Login Client → buka detail order yang sama → amati fase", e:"Perubahan fase langsung terlihat tanpa refresh manual"},
+    {t:"Artist mengunggah file progres", s:"Halaman order → unggah gambar sketsa/progres", e:"File tersimpan & terlihat oleh Client"},
+    {t:"Artist mengirim hasil akhir", s:"Setelah fase final → kirim/upload hasil akhir", e:"Status jadi menunggu konfirmasi Client (waiting_client)"},
+  ]},
+  {code:"H", name:"Revisi & Penyelesaian Order", items:[
+    {t:"Client meminta revisi", s:"Order waiting_client → \"Request Revision\" → isi catatan", e:"Jumlah revisi bertambah, status kembali pengerjaan"},
+    {t:"Mencoba revisi melebihi batas maksimal", s:"Ajukan revisi setelah batas maksimal tercapai", e:"Sistem menolak permintaan revisi tambahan"},
+    {t:"Client menyelesaikan order", s:"Hasil akhir disetujui → \"Complete/Selesai\"", e:"Status jadi completed, fitur ulasan aktif"},
+    {t:"Mengunduh hasil akhir", s:"Order completed → tombol unduh hasil", e:"File hasil akhir berhasil diunduh"},
+  ]},
+  {code:"I", name:"Komunikasi (Chat)", items:[
+    {t:"Mengirim pesan chat", s:"/chat → pilih percakapan → ketik pesan → kirim", e:"Pesan terkirim & tampil di thread"},
+    {t:"Menerima pesan secara real-time", s:"Kirim pesan dari akun lain → amati penerima", e:"Pesan baru muncul otomatis tanpa refresh"},
+    {t:"Mengirim gambar dalam chat", s:"Lampirkan file gambar pada kolom chat → kirim", e:"Gambar terkirim & tampil sebagai pesan bergambar"},
+    {t:"Indikator pesan terbaca", s:"Buka thread dengan pesan belum dibaca", e:"Badge pesan belum dibaca hilang/berkurang"},
+  ]},
+  {code:"J", name:"Notifikasi & Ulasan (Review)", items:[
+    {t:"Menerima notifikasi perubahan status order", s:"Ubah status order (cth. Artist accept) → cek /notifications", e:"Notifikasi baru muncul sesuai jenis event"},
+    {t:"Memfilter notifikasi berdasarkan tipe", s:"/notifications → klik salah satu tab filter", e:"Hanya notifikasi tipe terkait yang tampil"},
+    {t:"Memberi ulasan setelah order selesai", s:"Order completed → isi form review & rating → submit", e:"Ulasan tersimpan, tampil publik setelah kedua pihak mengisi"},
+    {t:"Melihat rating rata-rata Artist diperbarui", s:"Setelah ulasan visible → buka kembali detail jasa terkait", e:"Rating rata-rata & jumlah review diperbarui otomatis"},
+  ]},
+];
+
+const likertQuestions = [
+  "Tampilan antarmuka Aneris Art Platform mudah dipahami dan digunakan.",
+  "Proses pendaftaran dan login berjalan lancar tanpa kendala berarti.",
+  "Fitur pencarian dan filter jasa komisi membantu menemukan jasa yang sesuai.",
+  "Proses pemesanan (add-on, kalkulasi harga, checkout) jelas dan mudah diikuti.",
+  "Fitur Progress Tracking membantu memantau perkembangan pengerjaan komisi.",
+  "Fitur Queue Management memberikan transparansi antrian pesanan yang jelas.",
+  "Fitur chat memudahkan komunikasi antara Artist dan Client.",
+  "Proses pembayaran melalui Midtrans Snap terasa aman dan dapat diandalkan.",
+  "Sistem ulasan (review) dirasa adil dan membantu menilai kredibilitas.",
+  "Secara keseluruhan, saya puas menggunakan Aneris Art Platform.",
+];
+
+const conclusionOptions = [
+  "Diterima tanpa catatan",
+  "Diterima dengan catatan perbaikan",
+  "Ditolak / memerlukan perbaikan signifikan",
+];
+
+const state = {
+  role: null,
+  items: {},   // "A-0": {result:"ok"/"bad", note:""}
+  likert: {},  // idx: 1-5
+  conclusion: null,
+};
+
+let totalFields = 0;
+
+function itemKey(mi, ii){ return mi+"-"+ii; }
+
+function renderModules(){
+  const root = document.getElementById("modulesRoot");
+  modules.forEach((m, mi) => {
+    totalFields += m.items.length;
+    const card = document.createElement("div");
+    card.className = "card";
+    const body = document.createElement("div");
+    body.className = "module-body";
+    body.id = "body-"+mi;
+
+    m.items.forEach((it, ii) => {
+      const key = itemKey(mi, ii);
+      state.items[key] = {result:null, note:""};
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `
+        <div class="item-no">${m.code}${ii+1}</div>
+        <div class="item-title">${it.t}</div>
+        <div class="item-steps"><strong>Langkah:</strong> ${it.s}<br><strong>Diharapkan:</strong> ${it.e}</div>
+        <div class="toggle-row">
+          <div class="toggle ok" data-key="${key}" data-val="ok">✓ Sesuai</div>
+          <div class="toggle bad" data-key="${key}" data-val="bad">✗ Tidak</div>
+        </div>
+        <input class="note-input" type="text" placeholder="Catatan (opsional)" data-notekey="${key}">
+      `;
+      body.appendChild(row);
+    });
+
+    const header = document.createElement("div");
+    header.className = "module-header";
+    header.innerHTML = `
+      <div class="module-badge">${m.code}</div>
+      <div class="module-title">${m.name}</div>
+      <div class="module-count" id="count-${mi}">0/${m.items.length}</div>
+      <div class="chev" id="chev-${mi}">▾</div>
+    `;
+    header.onclick = () => {
+      body.classList.toggle("open");
+      const chev = document.getElementById("chev-"+mi);
+      chev.style.transform = body.classList.contains("open") ? "rotate(180deg)" : "rotate(0deg)";
+    };
+
+    card.appendChild(header);
+    card.appendChild(body);
+    root.appendChild(card);
+  });
+
+  // open first module by default
+  document.getElementById("body-0").classList.add("open");
+  document.getElementById("chev-0").style.transform = "rotate(180deg)";
+
+  root.querySelectorAll(".toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.key;
+      const val = btn.dataset.val;
+      state.items[key].result = (state.items[key].result === val) ? null : val;
+      root.querySelectorAll(`.toggle[data-key="${key}"]`).forEach(b => {
+        b.classList.toggle("active", state.items[key].result === b.dataset.val);
+      });
+      refreshProgress();
+    });
+  });
+
+  root.querySelectorAll(".note-input").forEach(inp => {
+    inp.addEventListener("input", () => {
+      state.items[inp.dataset.notekey].note = inp.value;
+    });
+  });
+}
+
+function renderLikert(){
+  const root = document.getElementById("likertRoot");
+  likertQuestions.forEach((q, idx) => {
+    totalFields += 1;
+    state.likert[idx] = null;
+    const div = document.createElement("div");
+    div.className = "likert-item";
+    div.innerHTML = `
+      <div class="likert-text">${idx+1}. ${q}</div>
+      <div class="likert-row" data-idx="${idx}">
+        ${[1,2,3,4,5].map(n => `<div class="likert-btn" data-n="${n}">${n}</div>`).join("")}
+      </div>
+      <div class="likert-scale-label"><span>Sangat Tidak Setuju</span><span>Sangat Setuju</span></div>
+    `;
+    root.appendChild(div);
+  });
+
+  root.querySelectorAll(".likert-row").forEach(row => {
+    const idx = row.dataset.idx;
+    row.querySelectorAll(".likert-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.likert[idx] = Number(btn.dataset.n);
+        row.querySelectorAll(".likert-btn").forEach(b => b.classList.toggle("active", b === btn));
+        refreshProgress();
+      });
+    });
+  });
+}
+
+function renderConclusion(){
+  totalFields += 1;
+  const root = document.getElementById("conclusionRoot");
+  conclusionOptions.forEach((opt, idx) => {
+    const div = document.createElement("div");
+    div.className = "conclusion-opt";
+    div.innerHTML = `<div class="dot"></div><div>${opt}</div>`;
+    div.onclick = () => {
+      state.conclusion = opt;
+      root.querySelectorAll(".conclusion-opt").forEach(o => o.classList.remove("active"));
+      div.classList.add("active");
+    };
+    root.appendChild(div);
+  });
+}
+
+function refreshProgress(){
+  let filled = 0;
+  Object.values(state.items).forEach(v => { if (v.result) filled++; });
+  Object.values(state.likert).forEach(v => { if (v) filled++; });
+  if (state.conclusion) filled++;
+
+  modules.forEach((m, mi) => {
+    let c = 0;
+    m.items.forEach((it, ii) => { if (state.items[itemKey(mi,ii)].result) c++; });
+    document.getElementById("count-"+mi).textContent = `${c}/${m.items.length}`;
+  });
+
+  const pct = totalFields ? Math.round((filled/totalFields)*100) : 0;
+  document.getElementById("barFill").style.width = pct+"%";
+  document.getElementById("barText").textContent = `${filled} / ${totalFields} terisi`;
+  document.getElementById("ringLabel").textContent = pct+"%";
+  const circumference = 119.4;
+  const offset = circumference - (pct/100)*circumference;
+  document.getElementById("ringFg").style.strokeDashoffset = offset;
+}
+
+document.getElementById("rolePicker").querySelectorAll(".pill").forEach(p => {
+  p.addEventListener("click", () => {
+    state.role = p.dataset.val;
+    document.querySelectorAll("#rolePicker .pill").forEach(x => x.classList.remove("active"));
+    p.classList.add("active");
+  });
+});
+
+function copySummary(){
+  let lines = [];
+  lines.push("HASIL UAT — ANERIS ART PLATFORM");
+  lines.push("Penguji: " + (document.getElementById("respName").value || "-"));
+  lines.push("Peran: " + (state.role || "-"));
+  lines.push("Perangkat: " + (document.getElementById("respDevice").value || "-"));
+  lines.push("Tanggal: " + (document.getElementById("respDate").value || "-"));
+  lines.push("");
+  modules.forEach((m, mi) => {
+    lines.push(`Modul ${m.code} — ${m.name}`);
+    m.items.forEach((it, ii) => {
+      const d = state.items[itemKey(mi,ii)];
+      const mark = d.result === "ok" ? "Sesuai" : d.result === "bad" ? "Tidak" : "(belum diisi)";
+      lines.push(`  ${m.code}${ii+1}. ${it.t} — ${mark}${d.note ? " | Catatan: "+d.note : ""}`);
+    });
+    lines.push("");
+  });
+  lines.push("Kuesioner Kepuasan:");
+  likertQuestions.forEach((q, idx) => {
+    lines.push(`  ${idx+1}. ${q} — ${state.likert[idx] || "-"}/5`);
+  });
+  lines.push("");
+  lines.push("Kesimpulan: " + (state.conclusion || "-"));
+  const notes = document.getElementById("finalNotes").value;
+  if (notes) lines.push("Catatan tambahan: " + notes);
+
+  const text = lines.join("\n");
+  navigator.clipboard.writeText(text).then(() => {
+    alert("Ringkasan disalin ke clipboard!");
+  }).catch(() => {
+    alert(text);
+  });
+}
+
+renderModules();
+renderLikert();
+renderConclusion();
+refreshProgress();
+</script>
+
+</body>
+</html>
