@@ -144,19 +144,7 @@
   .btn-primary{background:var(--violet-600); color:white;}
   .btn-secondary{background:var(--violet-100); color:var(--violet-700);}
 
-  @media print{
-    *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact; }
-    .top{position:static; box-shadow:none;}
-    .footer-actions{display:none !important;}
-    .module-body{max-height:none !important;}
-    .module-header{cursor:default;}
-    .chev{display:none;}
-    .card{break-inside:avoid-page; page-break-inside:avoid;}
-    .item{break-inside:avoid-page; page-break-inside:avoid;}
-    .likert-item{break-inside:avoid-page; page-break-inside:avoid;}
-    body{padding-bottom:0; background:white;}
-    .wrap{max-width:100%;}
-  }
+  .btn[disabled]{opacity:.6; cursor:default;}
 
   .section-title{font-size:13px; font-weight:700; color:var(--violet-700); text-transform:uppercase; letter-spacing:.4px; margin:0 0 10px;}
 </style>
@@ -231,9 +219,10 @@
 
 <div class="footer-actions">
   <button class="btn btn-secondary" onclick="copySummary()">Salin Ringkasan</button>
-  <button class="btn btn-primary" onclick="window.print()">Cetak / Simpan PDF</button>
+  <button class="btn btn-primary" id="pdfBtn" onclick="downloadPdf()">Download PDF</button>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 <script>
 const modules = [
   {code:"A", name:"Autentikasi & Akun Pengguna", items:[
@@ -507,6 +496,110 @@ function copySummary(){
   }).catch(() => {
     alert(text);
   });
+}
+
+function downloadPdf(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"mm", format:"a4"});
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const marginL = 18, marginR = 18;
+  const contentW = pageW - marginL - marginR;
+  let y = 20;
+
+  function ensureSpace(need){
+    if (y + need > pageH - 16){
+      doc.addPage();
+      y = 20;
+    }
+  }
+  function writeLines(text, x, size, weight, color, lineGap){
+    doc.setFont("helvetica", weight || "normal");
+    doc.setFontSize(size);
+    doc.setTextColor(color || "#111111");
+    const lines = doc.splitTextToSize(text, contentW - (x - marginL));
+    lines.forEach(line => {
+      ensureSpace(lineGap);
+      doc.text(line, x, y);
+      y += lineGap;
+    });
+  }
+
+  // Title
+  writeLines("Hasil UAT — Aneris Art Platform", marginL, 16, "bold", "#2E1065", 7);
+  writeLines("aneris.my.id", marginL, 10, "normal", "#7C3AED", 6);
+  y += 2;
+
+  // Respondent info
+  const name = document.getElementById("respName").value || "-";
+  const device = document.getElementById("respDevice").value || "-";
+  const date = document.getElementById("respDate").value || "-";
+  const role = state.role || "-";
+  [
+    ["Nama", name],
+    ["Peran", role],
+    ["Perangkat/Browser", device],
+    ["Tanggal", date],
+  ].forEach(([label, val]) => {
+    ensureSpace(6);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor("#333333");
+    doc.text(label + ":", marginL, y);
+    doc.setFont("helvetica", "normal"); doc.setTextColor("#111111");
+    doc.text(String(val), marginL + 38, y);
+    y += 6;
+  });
+  y += 3;
+
+  // Modules — question + checked answer only
+  modules.forEach((m, mi) => {
+    ensureSpace(9);
+    writeLines(`${m.code}. ${m.name}`, marginL, 11.5, "bold", "#5B21B6", 6);
+    m.items.forEach((it, ii) => {
+      const d = state.items[itemKey(mi, ii)];
+      const mark = d.result === "ok" ? "Sesuai" : d.result === "bad" ? "Tidak" : "-";
+      const markColor = d.result === "ok" ? "#16A34A" : d.result === "bad" ? "#DC2626" : "#999999";
+      ensureSpace(6);
+      const qText = `${ii+1}. ${it.t}`;
+      const qLines = doc.splitTextToSize(qText, contentW - 26);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(10.2); doc.setTextColor("#111111");
+      doc.text(qLines, marginL, y);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(10.2); doc.setTextColor(markColor);
+      doc.text(mark, pageW - marginR, y, {align:"right"});
+      y += qLines.length * 5;
+      if (d.note){
+        writeLines("Catatan: " + d.note, marginL + 4, 9, "italic", "#666666", 4.6);
+      }
+      y += 1.5;
+    });
+    y += 2;
+  });
+
+  // Likert
+  ensureSpace(10);
+  writeLines("Kuesioner Kepuasan Pengguna", marginL, 12, "bold", "#2E1065", 7);
+  likertQuestions.forEach((q, idx) => {
+    const val = state.likert[idx] ? state.likert[idx] + "/5" : "-";
+    ensureSpace(6);
+    const qLines = doc.splitTextToSize(`${idx+1}. ${q}`, contentW - 20);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10.2); doc.setTextColor("#111111");
+    doc.text(qLines, marginL, y);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10.2); doc.setTextColor("#5B21B6");
+    doc.text(val, pageW - marginR, y, {align:"right"});
+    y += qLines.length * 5 + 1.5;
+  });
+  y += 3;
+
+  // Conclusion
+  ensureSpace(14);
+  writeLines("Kesimpulan Pengujian", marginL, 12, "bold", "#2E1065", 7);
+  writeLines(state.conclusion || "-", marginL, 10.5, "bold", "#111111", 6);
+  const finalNotes = document.getElementById("finalNotes").value;
+  if (finalNotes){
+    writeLines("Catatan tambahan: " + finalNotes, marginL, 10, "normal", "#333333", 5.5);
+  }
+
+  const fileName = "UAT-Aneris-" + (name !== "-" ? name.replace(/\s+/g,"_") : "Hasil") + ".pdf";
+  doc.save(fileName);
 }
 
 renderModules();
